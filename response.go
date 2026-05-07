@@ -222,7 +222,7 @@ func (rs Responder) RedirectWithSession(w http.ResponseWriter, r *http.Request, 
 
 	rs.setSessionHeaders(w, sessionResult)
 
-	rs.Redirect(w, r, redirectURL, http.StatusFound)
+	rs.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }
 
 // SerializeModel serializes a model using its schema's Serialize method.
