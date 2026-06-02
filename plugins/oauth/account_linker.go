@@ -30,6 +30,9 @@ func (o *oauthPlugin) CreateOrLinkAccount(ctx context.Context, info *limen.OAuth
 	}
 
 	if user != nil {
+		if user.EmailVerifiedAt == nil {
+			return nil, ErrOAuthLocalEmailNotVerified
+		}
 		return o.linkAccountToUser(ctx, user, info)
 	}
 
@@ -78,6 +81,10 @@ func (o *oauthPlugin) validateProviderInfo(info *limen.OAuthAccountProfile) erro
 
 	if info.Email == "" {
 		return limen.NewLimenError("email is required", http.StatusBadRequest, nil)
+	}
+
+	if !info.EmailVerified {
+		return ErrOAuthEmailNotVerified
 	}
 
 	return nil

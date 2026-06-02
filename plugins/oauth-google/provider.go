@@ -3,12 +3,9 @@ package oauthgoogle
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -39,6 +36,9 @@ func newGoogleProvider(cfg *config) *googleProvider {
 	if len(scopes) == 0 {
 		scopes = []string{"openid", "email", "profile"}
 	}
+	if cfg.verifyIDToken == nil {
+		cfg.verifyIDToken = oauth.NewIDTokenVerifier("https://accounts.google.com", cfg.clientID)
+	}
 	config := &oauth2.Config{
 		ClientID:     cfg.clientID,
 		ClientSecret: cfg.clientSecret,
@@ -62,11 +62,11 @@ func (g *googleProvider) OAuth2Config() (*oauth2.Config, []oauth2.AuthCodeOption
 	return g.oauthConfig, authOpts
 }
 
-func (g *googleProvider) GetUserInfo(_ context.Context, token *oauth.TokenResponse) (*oauth.ProviderUserInfo, error) {
+func (g *googleProvider) GetUserInfo(ctx context.Context, token *oauth.TokenResponse) (*oauth.ProviderUserInfo, error) {
 	if token.IDToken == "" {
 		return nil, errors.New("google: id_token required; include openid scope")
 	}
-	claims, err := decodeIDTokenClaims(token.IDToken)
+	claims, err := g.config.verifyIDToken(ctx, token.IDToken)
 	if err != nil {
 		return nil, fmt.Errorf("google: %w", err)
 	}
@@ -91,23 +91,4 @@ func (g *googleProvider) GetUserInfo(_ context.Context, token *oauth.TokenRespon
 		AvatarURL:     picture,
 		Raw:           claims,
 	}, nil
-}
-
-// decodeIDTokenClaims decodes the payload segment of a JWT without verification.
-// Safe here because the token was obtained directly from Google's token endpoint over TLS.
-func decodeIDTokenClaims(idToken string) (map[string]any, error) {
-	parts := strings.SplitN(idToken, ".", 3)
-	if len(parts) != 3 {
-		return nil, errors.New("id token has invalid JWT format")
-	}
-	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
-	if err != nil {
-		return nil, fmt.Errorf("id token payload decode: %w", err)
-	}
-	var claims map[string]any
-	if err := json.Unmarshal(payload, &claims); err != nil {
-		return nil, fmt.Errorf("id token payload unmarshal: %w", err)
-	}
-
-	return claims, nil
 }

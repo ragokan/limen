@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -34,7 +33,9 @@ var (
 // generateCryptoSecureRandomString generates a cryptographically secure random string
 func generateCryptoSecureRandomString() string {
 	buf := make([]byte, 32)
-	_, _ = rand.Read(buf)
+	if _, err := rand.Read(buf); err != nil {
+		panic(fmt.Sprintf("crypto random read failed: %v", err))
+	}
 	return base64.RawURLEncoding.EncodeToString(buf)
 }
 
@@ -46,22 +47,13 @@ func GenerateRandomString(length int, charSetType ...CharSetType) string {
 	charCount := len(chars)
 	expectedBytes := make([]byte, length)
 
-	_, _ = rand.Read(expectedBytes)
+	if _, err := rand.Read(expectedBytes); err != nil {
+		panic(fmt.Sprintf("crypto random read failed: %v", err))
+	}
 	for i := range length {
 		expectedBytes[i] = chars[int(expectedBytes[i])%charCount]
 	}
 	return string(expectedBytes)
-}
-
-func ipExtractorFromRemoteAddr(request *http.Request) string {
-	if ip := request.Header.Get("X-Forwarded-For"); ip != "" {
-		return ip
-	}
-	if ip := request.Header.Get("X-Real-IP"); ip != "" {
-		return ip
-	}
-	ip, _, _ := net.SplitHostPort(request.RemoteAddr)
-	return ip
 }
 
 // compileRateLimitPattern compiles a rate limit pattern to a regex

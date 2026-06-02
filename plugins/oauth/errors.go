@@ -16,5 +16,7 @@ var (
 	ErrPKCEVerifierNotFound                  = limen.NewLimenError("PKCE verifier not found", http.StatusBadRequest, nil)
 	ErrAccountAlreadyLinkedToAnotherUser     = limen.NewLimenError("this provider account is already linked to another user", http.StatusConflict, nil)
 	ErrAccountCannotBeLinkedToDifferentEmail = limen.NewLimenError("user cannot be linked to this provider account because the email does not match", http.StatusConflict, nil)
+	ErrOAuthEmailNotVerified                 = limen.NewLimenError("provider email is not verified", http.StatusUnauthorized, nil)
+	ErrOAuthLocalEmailNotVerified            = limen.NewLimenError("local email must be verified before account linking", http.StatusUnauthorized, nil)
 	ErrNoRefreshToken                        = limen.NewLimenError("no refresh token available for this account", http.StatusBadRequest, nil)
 )

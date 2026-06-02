@@ -45,11 +45,13 @@ func TestCreateOrLinkAccount(t *testing.T) {
 		ctx := context.Background()
 
 		user := seedOAuthUser(t, l, "existing@example.com")
+		verifyOAuthUser(t, plugin, user)
 
 		profile := &limen.OAuthAccountProfile{
 			Provider:          "test",
 			ProviderAccountID: "prov-456",
 			Email:             "existing@example.com",
+			EmailVerified:     true,
 			AccessToken:       "at",
 		}
 
@@ -71,6 +73,7 @@ func TestCreateOrLinkAccount(t *testing.T) {
 			Provider:          "test",
 			ProviderAccountID: "prov-789",
 			Email:             "update@example.com",
+			EmailVerified:     true,
 			AccessToken:       "new-at",
 			RefreshToken:      "new-rt",
 		}
@@ -90,11 +93,71 @@ func TestCreateOrLinkAccount(t *testing.T) {
 			Provider:          "test",
 			ProviderAccountID: "prov-new",
 			Email:             "noexist@example.com",
+			EmailVerified:     true,
 			AccessToken:       "at",
 		}
 
 		_, err := plugin.CreateOrLinkAccount(ctx, profile)
 		assert.ErrorIs(t, err, ErrAccountNotFound)
+	})
+
+	t.Run("unverified email rejected for new user", func(t *testing.T) {
+		t.Parallel()
+
+		_, plugin := newTestOAuthPlugin(t, WithDisableTokensEncryption())
+		ctx := context.Background()
+
+		profile := &limen.OAuthAccountProfile{
+			Provider:          "test",
+			ProviderAccountID: "prov-unverified-new",
+			Email:             "unverified-new@example.com",
+			EmailVerified:     false,
+			AccessToken:       "at",
+		}
+
+		_, err := plugin.CreateOrLinkAccount(ctx, profile)
+		assert.ErrorIs(t, err, ErrOAuthEmailNotVerified)
+	})
+
+	t.Run("unverified email rejected for existing account", func(t *testing.T) {
+		t.Parallel()
+
+		l, plugin := newTestOAuthPlugin(t, WithDisableTokensEncryption())
+		ctx := context.Background()
+
+		user := seedOAuthUser(t, l, "existing-unverified@example.com")
+		seedOAuthAccount(t, plugin, user.ID, "test", "prov-unverified-existing")
+
+		profile := &limen.OAuthAccountProfile{
+			Provider:          "test",
+			ProviderAccountID: "prov-unverified-existing",
+			Email:             "existing-unverified@example.com",
+			EmailVerified:     false,
+			AccessToken:       "at",
+		}
+
+		_, err := plugin.CreateOrLinkAccount(ctx, profile)
+		assert.ErrorIs(t, err, ErrOAuthEmailNotVerified)
+	})
+
+	t.Run("implicit link rejects unverified local email", func(t *testing.T) {
+		t.Parallel()
+
+		l, plugin := newTestOAuthPlugin(t, WithDisableTokensEncryption())
+		ctx := context.Background()
+
+		seedOAuthUser(t, l, "local-unverified@example.com")
+
+		profile := &limen.OAuthAccountProfile{
+			Provider:          "test",
+			ProviderAccountID: "prov-local-unverified",
+			Email:             "local-unverified@example.com",
+			EmailVerified:     true,
+			AccessToken:       "at",
+		}
+
+		_, err := plugin.CreateOrLinkAccount(ctx, profile)
+		assert.ErrorIs(t, err, ErrOAuthLocalEmailNotVerified)
 	})
 }
 
@@ -113,6 +176,7 @@ func TestLinkAccountToCurrentUser(t *testing.T) {
 			Provider:          "test",
 			ProviderAccountID: "prov-link",
 			Email:             "link@example.com",
+			EmailVerified:     true,
 			AccessToken:       "at",
 		}
 
@@ -134,6 +198,7 @@ func TestLinkAccountToCurrentUser(t *testing.T) {
 			Provider:          "test",
 			ProviderAccountID: "prov-same",
 			Email:             "same@example.com",
+			EmailVerified:     true,
 			AccessToken:       "new-at",
 		}
 
@@ -157,6 +222,7 @@ func TestLinkAccountToCurrentUser(t *testing.T) {
 			Provider:          "test",
 			ProviderAccountID: "prov-taken",
 			Email:             "other@example.com",
+			EmailVerified:     true,
 			AccessToken:       "at",
 		}
 
@@ -176,6 +242,7 @@ func TestLinkAccountToCurrentUser(t *testing.T) {
 			Provider:          "test",
 			ProviderAccountID: "prov-diff-email",
 			Email:             "different@example.com",
+			EmailVerified:     true,
 			AccessToken:       "at",
 		}
 
@@ -195,12 +262,33 @@ func TestLinkAccountToCurrentUser(t *testing.T) {
 			Provider:          "test",
 			ProviderAccountID: "prov-cross",
 			Email:             "different@example.com",
+			EmailVerified:     true,
 			AccessToken:       "at",
 		}
 
 		result, err := plugin.LinkAccountToCurrentUser(ctx, user, profile)
 		require.NoError(t, err)
 		assert.Equal(t, user.ID, result.User.ID)
+	})
+
+	t.Run("unverified email rejected for current user link", func(t *testing.T) {
+		t.Parallel()
+
+		l, plugin := newTestOAuthPlugin(t, WithDisableTokensEncryption())
+		ctx := context.Background()
+
+		user := seedOAuthUser(t, l, "current-unverified@example.com")
+
+		profile := &limen.OAuthAccountProfile{
+			Provider:          "test",
+			ProviderAccountID: "prov-current-unverified",
+			Email:             "current-unverified@example.com",
+			EmailVerified:     false,
+			AccessToken:       "at",
+		}
+
+		_, err := plugin.LinkAccountToCurrentUser(ctx, user, profile)
+		assert.ErrorIs(t, err, ErrOAuthEmailNotVerified)
 	})
 }
 

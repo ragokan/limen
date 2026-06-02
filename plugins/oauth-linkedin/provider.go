@@ -36,6 +36,9 @@ type linkedInProvider struct {
 }
 
 func newLinkedInProvider(cfg *config) *linkedInProvider {
+	if cfg.verifyIDToken == nil {
+		cfg.verifyIDToken = oauth.NewIDTokenVerifier("https://www.linkedin.com", cfg.clientID)
+	}
 	config := &oauth2.Config{
 		ClientID:     cfg.clientID,
 		ClientSecret: cfg.clientSecret,
@@ -64,11 +67,11 @@ func (l *linkedInProvider) PKCEEnabled() bool {
 	return false
 }
 
-func (l *linkedInProvider) GetUserInfo(_ context.Context, token *oauth.TokenResponse) (*oauth.ProviderUserInfo, error) {
+func (l *linkedInProvider) GetUserInfo(ctx context.Context, token *oauth.TokenResponse) (*oauth.ProviderUserInfo, error) {
 	if token.IDToken == "" {
 		return nil, errors.New("linkedin: id_token required; include openid scope")
 	}
-	claims, err := oauth.DecodeIDTokenClaims(token.IDToken)
+	claims, err := l.config.verifyIDToken(ctx, token.IDToken)
 	if err != nil {
 		return nil, fmt.Errorf("linkedin: %w", err)
 	}

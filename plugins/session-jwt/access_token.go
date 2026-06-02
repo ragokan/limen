@@ -98,10 +98,17 @@ func (p *sessionJWTPlugin) performRefresh(ctx context.Context, rawRefreshToken s
 			return nil, nil, ErrInvalidRefreshToken
 		}
 
-		if active, _ := p.FamilyHasActiveTokens(ctx, family); active {
-			_ = p.DeleteRefreshTokenFamily(ctx, family)
+		active, activeErr := p.FamilyHasActiveTokens(ctx, family)
+		if activeErr != nil {
+			return nil, nil, activeErr
+		}
+		if active {
+			if err := p.DeleteRefreshTokenFamily(ctx, family); err != nil {
+				return nil, nil, err
+			}
 			return nil, nil, ErrRefreshTokenReuse
 		}
+		return nil, nil, ErrInvalidRefreshToken
 	}
 
 	if time.Now().After(rt.ExpiresAt) {

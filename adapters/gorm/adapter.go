@@ -105,6 +105,13 @@ func (a *Adapter) FindMany(ctx context.Context, tableName limen.SchemaTableName,
 }
 
 func (a *Adapter) Update(ctx context.Context, tableName limen.SchemaTableName, conditions []limen.Where, updates map[string]any) error {
+	if len(updates) == 0 {
+		return nil
+	}
+	if len(conditions) == 0 {
+		return fmt.Errorf("%w: conditions required to prevent accidental table-wide update", limen.ErrMissingConditions)
+	}
+
 	db := a.getDB()
 	query := db.WithContext(ctx).Table(string(tableName))
 	query = a.applyConditions(query, conditions)
@@ -112,6 +119,10 @@ func (a *Adapter) Update(ctx context.Context, tableName limen.SchemaTableName, c
 }
 
 func (a *Adapter) Delete(ctx context.Context, tableName limen.SchemaTableName, conditions []limen.Where) error {
+	if len(conditions) == 0 {
+		return fmt.Errorf("%w: conditions required to prevent accidental table-wide delete", limen.ErrMissingConditions)
+	}
+
 	db := a.getDB()
 	query := db.WithContext(ctx).Table(string(tableName))
 	query = a.applyConditions(query, conditions)

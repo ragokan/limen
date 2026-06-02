@@ -25,6 +25,9 @@ func New(opts ...ConfigOption) oauth.Provider {
 	cfg.resolveDiscovery()
 	cfg.validate()
 	cfg.resolveDefaults()
+	if cfg.verifyIDToken == nil && cfg.issuer != "" {
+		cfg.verifyIDToken = oauth.NewIDTokenVerifier(cfg.issuer, cfg.clientID)
+	}
 
 	return &genericProvider{
 		config: cfg,
@@ -67,15 +70,40 @@ func (g *genericProvider) GetUserInfo(ctx context.Context, token *oauth.TokenRes
 	if g.config.getUserInfo != nil {
 		return g.config.getUserInfo(ctx, token)
 	}
-	if token.IDToken != "" {
-		return g.userInfoFromIDToken(token.IDToken)
+	if g.config.userInfoURL != "" {
+		info, err := g.fetchUserInfoFromURL(ctx, token)
+		if err != nil {
+			return nil, err
+		}
+		if token.IDToken != "" && g.config.verifyIDToken != nil {
+			claims, err := g.config.verifyIDToken(ctx, token.IDToken)
+			if err != nil {
+				return nil, err
+			}
+			sub, _ := claims["sub"].(string)
+			if sub != "" && info.ID != "" && sub != info.ID {
+				return nil, fmt.Errorf("userinfo subject does not match id_token subject")
+			}
+		}
+		return info, nil
 	}
-	return g.fetchUserInfoFromURL(ctx, token)
+	return g.userInfoFromIDToken(ctx, token.IDToken)
 }
 
-// userInfoFromIDToken decodes the id_token JWT payload and passes the claims to mapUserInfo.
-func (g *genericProvider) userInfoFromIDToken(idToken string) (*oauth.ProviderUserInfo, error) {
-	claims, err := oauth.DecodeIDTokenClaims(idToken)
+func (g *genericProvider) userInfoFromIDToken(ctx context.Context, idToken string) (*oauth.ProviderUserInfo, error) {
+	if idToken == "" {
+		return nil, fmt.Errorf("id_token is required when no userinfo endpoint is configured")
+	}
+
+	verifier := g.config.verifyIDToken
+	if verifier == nil {
+		if g.config.issuer == "" {
+			return nil, fmt.Errorf("issuer is required to verify id_token claims")
+		}
+		return nil, fmt.Errorf("id_token verifier is not configured")
+	}
+
+	claims, err := verifier(ctx, idToken)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +116,7 @@ func (g *genericProvider) userInfoFromIDToken(idToken string) (*oauth.ProviderUs
 }
 
 func (g *genericProvider) fetchUserInfoFromURL(ctx context.Context, token *oauth.TokenResponse) (*oauth.ProviderUserInfo, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, g.config.userInfoURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, g.config.userInfoURL, http.NoBody)
 	if err != nil {
 		return nil, err
 	}

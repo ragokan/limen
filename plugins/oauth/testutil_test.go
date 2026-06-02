@@ -63,6 +63,18 @@ func seedOAuthUser(t *testing.T, l *limen.Limen, email string) *limen.User {
 	return limen.SeedTestUser(t, l, email)
 }
 
+func verifyOAuthUser(t *testing.T, plugin *oauthPlugin, user *limen.User) {
+	t.Helper()
+	ctx := context.Background()
+	now := time.Now()
+	if err := plugin.core.DBAction.UpdateUser(ctx, &limen.User{EmailVerifiedAt: &now}, []limen.Where{
+		limen.Eq(plugin.core.Schema.User.GetIDField(), user.ID),
+	}); err != nil {
+		t.Fatalf("verifyOAuthUser: %v", err)
+	}
+	user.EmailVerifiedAt = &now
+}
+
 func seedOAuthAccount(t *testing.T, plugin *oauthPlugin, userID any, provider, providerAccountID string) {
 	t.Helper()
 	ctx := context.Background()

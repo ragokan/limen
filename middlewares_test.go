@@ -119,6 +119,59 @@ func TestMiddlewareCheckOrigin(t *testing.T) {
 	}
 }
 
+func TestMiddlewareCheckOrigin_DefaultTrustsOnlyBaseURL(t *testing.T) {
+	t.Parallel()
+
+	l := newTestLimen(t)
+	httpCore := newTestHTTPCore(t, l)
+	baseURL := l.core.GetBaseURL()
+
+	tests := []struct {
+		name       string
+		headers    map[string]string
+		wantStatus int
+	}{
+		{
+			name:       "base URL origin allowed",
+			headers:    map[string]string{"Origin": baseURL, "Content-Type": "application/json"},
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:       "missing origin allowed",
+			headers:    map[string]string{"Content-Type": "application/json"},
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:       "untrusted origin blocked",
+			headers:    map[string]string{"Origin": "http://evil.com", "Content-Type": "application/json"},
+			wantStatus: http.StatusForbidden,
+		},
+		{
+			name:       "untrusted referer blocked",
+			headers:    map[string]string{"Referer": "http://evil.com/path", "Content-Type": "application/json"},
+			wantStatus: http.StatusForbidden,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := httpCore.middlewareCheckOrigin()(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			}))
+			req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/auth/signin", http.NoBody)
+			for k, v := range tt.headers {
+				req.Header.Set(k, v)
+			}
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, req)
+
+			assert.Equal(t, tt.wantStatus, w.Code)
+		})
+	}
+}
+
 func TestMiddlewareCSRFProtection(t *testing.T) {
 	t.Parallel()
 

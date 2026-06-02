@@ -13,6 +13,7 @@ import (
 	"github.com/thecodearcher/limen/plugins/oauth"
 )
 
+//nolint:gosec // OAuth endpoint URL, not a credential.
 var facebookEndpoint = oauth2.Endpoint{
 	AuthURL:  "https://www.facebook.com/v25.0/dialog/oauth",
 	TokenURL: "https://graph.facebook.com/v25.0/oauth/access_token",
@@ -76,13 +77,14 @@ func (f *facebookProvider) GetUserInfo(ctx context.Context, token *oauth.TokenRe
 	}
 	name, _ := raw["name"].(string)
 	email, _ := raw["email"].(string)
+	emailVerified, _ := raw["email_verified"].(bool)
 
 	avatarURL := extractPictureURL(raw)
 
 	return &oauth.ProviderUserInfo{
 		ID:            id,
 		Email:         email,
-		EmailVerified: email != "",
+		EmailVerified: emailVerified,
 		Name:          name,
 		AvatarURL:     avatarURL,
 		Raw:           raw,

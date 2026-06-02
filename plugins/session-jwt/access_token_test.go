@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/thecodearcher/limen"
 )
@@ -142,4 +143,41 @@ func TestParseAccessTokenLenient_ExpiredButValid(t *testing.T) {
 	claims := plugin.parseAccessTokenLenient(signed)
 	assert.NotNil(t, claims)
 	assert.Equal(t, "user-1", claims.Subject)
+}
+
+func TestPerformRefresh_MissingTokenWithFamilyAndNoActiveTokens(t *testing.T) {
+	t.Parallel()
+
+	plugin := New()
+	limen.NewTestLimen(t, plugin)
+
+	_, _, err := plugin.performRefresh(t.Context(), "missing-refresh-token", "family-1")
+
+	assert.ErrorIs(t, err, ErrInvalidRefreshToken)
+}
+
+func TestPerformRefresh_MissingTokenWithActiveFamilyRevokesFamily(t *testing.T) {
+	t.Parallel()
+
+	plugin := New()
+	limen.NewTestLimen(t, plugin)
+	_, err := plugin.CreateRefreshToken(t.Context(), "user-1", "jti-1", "family-1", nil)
+	require.NoError(t, err)
+
+	_, _, err = plugin.performRefresh(t.Context(), "missing-refresh-token", "family-1")
+
+	assert.ErrorIs(t, err, ErrRefreshTokenReuse)
+	active, err := plugin.FamilyHasActiveTokens(t.Context(), "family-1")
+	require.NoError(t, err)
+	assert.False(t, active)
+}
+
+func TestRotateRefreshToken_NilOldToken(t *testing.T) {
+	t.Parallel()
+
+	plugin := newTestPlugin()
+
+	_, err := plugin.RotateRefreshToken(t.Context(), nil, "new-jti")
+
+	assert.ErrorIs(t, err, ErrInvalidRefreshToken)
 }

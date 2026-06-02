@@ -152,14 +152,18 @@ func DecodeIDTokenClaims(idToken string) (map[string]any, error) {
 // generateCodeVerifier creates a cryptographically random PKCE code_verifier
 func generateCodeVerifier() string {
 	b := make([]byte, 32)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		panic(fmt.Sprintf("oauth: crypto random read failed: %v", err))
+	}
 	return base64.RawURLEncoding.EncodeToString(b)
 }
 
 // generateRandomString generates a cryptographically secure random string
 func generateRandomString() string {
 	randomBytes := make([]byte, 32)
-	rand.Read(randomBytes)
+	if _, err := rand.Read(randomBytes); err != nil {
+		panic(fmt.Sprintf("oauth: crypto random read failed: %v", err))
+	}
 	return hex.EncodeToString(randomBytes)
 }
 

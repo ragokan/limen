@@ -108,6 +108,18 @@ func TestRateLimiter_Check_WindowReset(t *testing.T) {
 	})
 }
 
+func TestDefaultRateLimiterKeyGenerator_UsesRemoteAddr(t *testing.T) {
+	t.Parallel()
+
+	config := NewDefaultRateLimiterConfig()
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", http.NoBody)
+	req.RemoteAddr = "203.0.113.10:1234"
+	req.Header.Set("X-Forwarded-For", "198.51.100.10")
+	req.Header.Set("X-Real-IP", "198.51.100.11")
+
+	assert.Equal(t, "203.0.113.10", config.KeyGenerator(req))
+}
+
 // ---------------------------------------------------------------------------
 // Rule matching
 // ---------------------------------------------------------------------------

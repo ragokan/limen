@@ -38,6 +38,9 @@ type appleProvider struct {
 }
 
 func newAppleProvider(cfg *config) *appleProvider {
+	if cfg.verifyIDToken == nil {
+		cfg.verifyIDToken = oauth.NewIDTokenVerifier("https://appleid.apple.com", cfg.clientID)
+	}
 	oauthCfg := &oauth2.Config{
 		ClientID:     cfg.clientID,
 		ClientSecret: cfg.clientSecret,
@@ -70,7 +73,7 @@ func (a *appleProvider) GetUserInfo(ctx context.Context, token *oauth.TokenRespo
 	if token.IDToken == "" {
 		return nil, errors.New("apple: id_token required; include email scope")
 	}
-	claims, err := oauth.DecodeIDTokenClaims(token.IDToken)
+	claims, err := a.config.verifyIDToken(ctx, token.IDToken)
 	if err != nil {
 		return nil, fmt.Errorf("apple: %w", err)
 	}

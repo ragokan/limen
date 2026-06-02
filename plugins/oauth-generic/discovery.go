@@ -1,6 +1,7 @@
 package oauthgeneric
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,12 +13,13 @@ type discoveryDocument struct {
 	AuthorizationEndpoint string `json:"authorization_endpoint"`
 	TokenEndpoint         string `json:"token_endpoint"`
 	UserinfoEndpoint      string `json:"userinfo_endpoint"`
+	Issuer                string `json:"issuer"`
 }
 
 // fetchDiscoveryDocument fetches and parses the OpenID Connect discovery document.
 func fetchDiscoveryDocument(discoveryURL string) (*discoveryDocument, error) {
 	client := &http.Client{Timeout: 10 * time.Second}
-	req, err := http.NewRequest(http.MethodGet, discoveryURL, nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, discoveryURL, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("discovery request: %w", err)
 	}

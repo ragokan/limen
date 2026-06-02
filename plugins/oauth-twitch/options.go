@@ -1,14 +1,17 @@
 package oauthtwitch
 
+import "github.com/thecodearcher/limen/plugins/oauth"
+
 // ConfigOption configures the Twitch OAuth plugin.
 type ConfigOption func(*config)
 
 type config struct {
-	clientID     string
-	clientSecret string
-	redirectURL  string
-	scopes       []string
-	options      map[string]string
+	clientID      string
+	clientSecret  string
+	redirectURL   string
+	scopes        []string
+	options       map[string]string
+	verifyIDToken oauth.IDTokenVerifier
 }
 
 // WithClientID sets the Twitch OAuth2 client ID.
@@ -49,5 +52,11 @@ func WithOption(key, value string) ConfigOption {
 			c.options = make(map[string]string)
 		}
 		c.options[key] = value
+	}
+}
+
+func WithIDTokenVerifier(verifier oauth.IDTokenVerifier) ConfigOption {
+	return func(c *config) {
+		c.verifyIDToken = verifier
 	}
 }

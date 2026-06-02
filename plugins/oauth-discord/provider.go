@@ -13,6 +13,7 @@ import (
 	"github.com/thecodearcher/limen/plugins/oauth"
 )
 
+//nolint:gosec // OAuth endpoint URL, not a credential.
 var discordEndpoint = oauth2.Endpoint{
 	AuthURL:  "https://discord.com/oauth2/authorize",
 	TokenURL: "https://discord.com/api/oauth2/token",
@@ -73,13 +74,14 @@ func (d *discordProvider) GetUserInfo(ctx context.Context, token *oauth.TokenRes
 	}
 	username, _ := raw["username"].(string)
 	email, _ := raw["email"].(string)
+	emailVerified, _ := raw["verified"].(bool)
 
 	avatarURL := buildAvatarURL(id, raw)
 
 	return &oauth.ProviderUserInfo{
 		ID:            id,
 		Email:         email,
-		EmailVerified: email != "",
+		EmailVerified: emailVerified,
 		Name:          username,
 		AvatarURL:     avatarURL,
 		Raw:           raw,

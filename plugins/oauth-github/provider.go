@@ -25,6 +25,7 @@ func New(opts ...ConfigOption) oauth.Provider {
 	return newGitHubProvider(cfg)
 }
 
+//nolint:gosec // OAuth endpoint URL, not a credential.
 var githubEndpoint = oauth2.Endpoint{
 	AuthURL:  "https://github.com/login/oauth/authorize",
 	TokenURL: "https://github.com/login/oauth/access_token",
@@ -71,9 +72,13 @@ func (g *githubProvider) GetUserInfo(ctx context.Context, token *oauth.TokenResp
 		return nil, err
 	}
 
-	email := raw["email"]
-	if email == nil || email == "" {
-		email, _ = g.fetchPrimaryEmail(ctx, token.AccessToken)
+	email, _ := raw["email"].(string)
+	selectedEmail, emailVerified, err := g.fetchPrimaryEmail(ctx, token.AccessToken, email)
+	if err != nil {
+		return nil, err
+	}
+	if email == "" {
+		email = selectedEmail
 	}
 
 	id, _ := raw["id"].(float64)
@@ -81,49 +86,70 @@ func (g *githubProvider) GetUserInfo(ctx context.Context, token *oauth.TokenResp
 	avatarURL, _ := raw["avatar_url"].(string)
 	return &oauth.ProviderUserInfo{
 		ID:            fmt.Sprintf("%d", int64(id)),
-		Email:         email.(string),
-		EmailVerified: email != "",
+		Email:         email,
+		EmailVerified: emailVerified,
 		Name:          name,
 		AvatarURL:     avatarURL,
 		Raw:           raw,
 	}, nil
 }
 
-func (g *githubProvider) fetchPrimaryEmail(ctx context.Context, accessToken string) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.github.com/user/emails", nil)
+type githubEmail struct {
+	Email    string `json:"email"`
+	Primary  bool   `json:"primary"`
+	Verified bool   `json:"verified"`
+}
+
+func (g *githubProvider) fetchPrimaryEmail(ctx context.Context, accessToken, preferredEmail string) (string, bool, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.github.com/user/emails", http.NoBody)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("Accept", "application/json")
 	resp, err := g.httpClient.Do(req)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return "", nil
+		return preferredEmail, false, nil
 	}
-	var emails []struct {
-		Email    string `json:"email"`
-		Primary  bool   `json:"primary"`
-		Verified bool   `json:"verified"`
-	}
+	var emails []githubEmail
 	if err := json.NewDecoder(resp.Body).Decode(&emails); err != nil {
-		return "", err
+		return "", false, err
 	}
+	email, verified := selectGitHubEmail(preferredEmail, emails)
+	return email, verified, nil
+}
+
+func selectGitHubEmail(preferredEmail string, emails []githubEmail) (string, bool) {
+	if preferredEmail != "" {
+		for _, e := range emails {
+			if e.Email == preferredEmail {
+				return preferredEmail, e.Verified
+			}
+		}
+		return preferredEmail, false
+	}
+
 	for _, e := range emails {
 		if e.Primary && e.Verified {
-			return e.Email, nil
+			return e.Email, true
 		}
 	}
 	for _, e := range emails {
 		if e.Verified {
-			return e.Email, nil
+			return e.Email, true
+		}
+	}
+	for _, e := range emails {
+		if e.Primary {
+			return e.Email, false
 		}
 	}
 	if len(emails) > 0 {
-		return emails[0].Email, nil
+		return emails[0].Email, false
 	}
-	return "", nil
+	return "", false
 }

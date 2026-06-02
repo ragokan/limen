@@ -92,6 +92,10 @@ func (p *sessionJWTPlugin) FamilyHasActiveTokens(ctx context.Context, family str
 // RotateRefreshToken deletes the old refresh token and creates a new one in
 // the same family. Returns the new refresh token.
 func (p *sessionJWTPlugin) RotateRefreshToken(ctx context.Context, old *RefreshToken, newJWTID string) (*RefreshToken, error) {
+	if old == nil {
+		return nil, ErrInvalidRefreshToken
+	}
+
 	var newRT *RefreshToken
 	err := p.core.WithTransaction(ctx, func(txCtx context.Context) error {
 		if err := p.core.Delete(txCtx, p.refreshTokenSchema, []limen.Where{

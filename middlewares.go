@@ -55,14 +55,14 @@ func (httpCore *LimenHTTPCore) middlewareCheckOrigin() Middleware {
 				return
 			}
 
-			if len(httpCore.trustedOriginsPatterns) == 0 {
-				next.ServeHTTP(w, r)
-				return
-			}
-
 			origin := r.Header.Get("Origin")
 			if origin == "" {
 				origin = r.Header.Get("Referer")
+			}
+
+			if origin == "" {
+				next.ServeHTTP(w, r)
+				return
 			}
 
 			if httpCore.IsTrustedOrigin(origin) {

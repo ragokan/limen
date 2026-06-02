@@ -2,6 +2,7 @@ package limen
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 )
@@ -54,6 +55,14 @@ func NewDefaultSessionConfig(opts ...SessionConfigOption) *sessionConfig {
 	}
 
 	return config
+}
+
+func ipExtractorFromRemoteAddr(request *http.Request) string {
+	ip, _, err := net.SplitHostPort(request.RemoteAddr)
+	if err != nil {
+		return request.RemoteAddr
+	}
+	return ip
 }
 
 func (c *sessionConfig) validate() error {

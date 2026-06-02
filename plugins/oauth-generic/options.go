@@ -9,6 +9,8 @@ import (
 // ConfigOption configures the generic OAuth provider.
 type ConfigOption func(*config)
 
+const defaultEmailScope = "email"
+
 type config struct {
 	name                  string
 	clientID              string
@@ -16,6 +18,7 @@ type config struct {
 	authorizationURL      string
 	tokenURL              string
 	userInfoURL           string
+	issuer                string
 	discoveryURL          string
 	scopes                []string
 	redirectURL           string
@@ -25,6 +28,7 @@ type config struct {
 	buildAuthorizationURL func(ctx context.Context, state, codeVerifier, callbackRedirectURI string) (string, error)
 	exchangeTokens        func(ctx context.Context, code, codeVerifier, redirectURI string) (*oauth.TokenResponse, error)
 	refreshTokens         func(ctx context.Context, refreshToken string) (*oauth.TokenResponse, error)
+	verifyIDToken         oauth.IDTokenVerifier
 }
 
 func (c *config) resolveDiscovery() {
@@ -43,6 +47,9 @@ func (c *config) resolveDiscovery() {
 	}
 	if c.userInfoURL == "" {
 		c.userInfoURL = doc.UserinfoEndpoint
+	}
+	if c.issuer == "" {
+		c.issuer = doc.Issuer
 	}
 }
 
@@ -76,7 +83,7 @@ func (c *config) validate() {
 
 func (c *config) resolveDefaults() {
 	if len(c.scopes) == 0 {
-		c.scopes = []string{"openid", "email", "profile"}
+		c.scopes = []string{"openid", defaultEmailScope, "profile"}
 	}
 }
 
@@ -119,6 +126,12 @@ func WithTokenURL(url string) ConfigOption {
 func WithUserInfoURL(url string) ConfigOption {
 	return func(c *config) {
 		c.userInfoURL = url
+	}
+}
+
+func WithIssuer(issuer string) ConfigOption {
+	return func(c *config) {
+		c.issuer = issuer
 	}
 }
 
@@ -193,5 +206,11 @@ func WithExchangeTokens(fn func(ctx context.Context, code, codeVerifier, redirec
 func WithRefreshTokens(fn func(ctx context.Context, refreshToken string) (*oauth.TokenResponse, error)) ConfigOption {
 	return func(c *config) {
 		c.refreshTokens = fn
+	}
+}
+
+func WithIDTokenVerifier(verifier oauth.IDTokenVerifier) ConfigOption {
+	return func(c *config) {
+		c.verifyIDToken = verifier
 	}
 }

@@ -38,6 +38,9 @@ type twitchProvider struct {
 }
 
 func newTwitchProvider(cfg *config) *twitchProvider {
+	if cfg.verifyIDToken == nil {
+		cfg.verifyIDToken = oauth.NewIDTokenVerifier("https://id.twitch.tv/oauth2", cfg.clientID)
+	}
 	config := &oauth2.Config{
 		ClientID:     cfg.clientID,
 		ClientSecret: cfg.clientSecret,
@@ -62,11 +65,11 @@ func (t *twitchProvider) OAuth2Config() (*oauth2.Config, []oauth2.AuthCodeOption
 	return t.oauthConfig, authOpts
 }
 
-func (t *twitchProvider) GetUserInfo(_ context.Context, token *oauth.TokenResponse) (*oauth.ProviderUserInfo, error) {
+func (t *twitchProvider) GetUserInfo(ctx context.Context, token *oauth.TokenResponse) (*oauth.ProviderUserInfo, error) {
 	if token.IDToken == "" {
 		return nil, errors.New("twitch: id_token required; include openid scope")
 	}
-	claims, err := oauth.DecodeIDTokenClaims(token.IDToken)
+	claims, err := t.config.verifyIDToken(ctx, token.IDToken)
 	if err != nil {
 		return nil, fmt.Errorf("twitch: %w", err)
 	}

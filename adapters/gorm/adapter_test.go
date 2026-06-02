@@ -93,6 +93,24 @@ func TestGorm_Update(t *testing.T) {
 	assert.Equal(t, "new@test.com", result["email"])
 }
 
+func TestGorm_Update_RequiresConditions(t *testing.T) {
+	adapter := setupTestGormDB(t)
+	ctx := context.Background()
+
+	err := adapter.Update(ctx, "test_items", nil, map[string]any{"email": "new@test.com"})
+
+	assert.ErrorIs(t, err, limen.ErrMissingConditions)
+}
+
+func TestGorm_Update_EmptyUpdatesNoop(t *testing.T) {
+	adapter := setupTestGormDB(t)
+	ctx := context.Background()
+
+	err := adapter.Update(ctx, "test_items", nil, map[string]any{})
+
+	assert.NoError(t, err)
+}
+
 func TestGorm_Delete(t *testing.T) {
 	adapter := setupTestGormDB(t)
 	ctx := context.Background()
@@ -106,6 +124,15 @@ func TestGorm_Delete(t *testing.T) {
 
 	_, err = adapter.FindOne(ctx, "test_items", []limen.Where{limen.Eq("name", "ToDelete")}, nil)
 	assert.ErrorIs(t, err, limen.ErrRecordNotFound)
+}
+
+func TestGorm_Delete_RequiresConditions(t *testing.T) {
+	adapter := setupTestGormDB(t)
+	ctx := context.Background()
+
+	err := adapter.Delete(ctx, "test_items", nil)
+
+	assert.ErrorIs(t, err, limen.ErrMissingConditions)
 }
 
 func TestGorm_Exists(t *testing.T) {

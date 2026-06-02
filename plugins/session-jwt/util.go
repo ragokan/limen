@@ -3,6 +3,7 @@ package sessionjwt
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -11,7 +12,9 @@ import (
 
 func generateOpaqueToken() string {
 	b := make([]byte, 32)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		panic(fmt.Sprintf("session-jwt: crypto random read failed: %v", err))
+	}
 	return base64.RawURLEncoding.EncodeToString(b)
 }
 
@@ -29,7 +32,9 @@ func parseRefreshTokenValue(raw string) (token, family string) {
 
 func generateJTI() string {
 	b := make([]byte, 16)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		panic(fmt.Sprintf("session-jwt: crypto random read failed: %v", err))
+	}
 	return base64.RawURLEncoding.EncodeToString(b)
 }
 

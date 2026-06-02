@@ -13,6 +13,7 @@ import (
 	"github.com/thecodearcher/limen/plugins/oauth"
 )
 
+//nolint:gosec // OAuth endpoint URL, not a credential.
 var spotifyEndpoint = oauth2.Endpoint{
 	AuthURL:  "https://accounts.spotify.com/authorize",
 	TokenURL: "https://accounts.spotify.com/api/token",
@@ -87,7 +88,7 @@ func (s *spotifyProvider) GetUserInfo(ctx context.Context, token *oauth.TokenRes
 	return &oauth.ProviderUserInfo{
 		ID:            id,
 		Email:         email,
-		EmailVerified: email != "",
+		EmailVerified: false,
 		Name:          name,
 		AvatarURL:     extractAvatarURL(raw),
 		Raw:           raw,
