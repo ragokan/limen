@@ -72,6 +72,14 @@ func (t *twoFactorPlugin) PluginHTTPConfig() limen.PluginHTTPConfig {
 	return limen.PluginHTTPConfig{
 		BasePath:   "/two-factor",
 		Middleware: []limen.Middleware{},
+		RateLimitRules: []*limen.RateLimitRule{
+			limen.NewRateLimitRule("/verify", 5, time.Minute),
+			limen.NewRateLimitRule("/otp/send", 3, time.Minute),
+			limen.NewRateLimitRule("/initiate-setup", 5, time.Minute),
+			limen.NewRateLimitRule("/finalize-setup", 5, time.Minute),
+			limen.NewRateLimitRule("/disable", 5, time.Minute),
+			limen.NewRateLimitRule("/backup-codes", 5, time.Minute),
+		},
 		Hooks: &limen.Hooks{
 			After: []*limen.Hook{
 				{

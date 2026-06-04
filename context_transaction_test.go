@@ -13,6 +13,7 @@ type testTxAdapter struct {
 	testMemoryAdapter
 	committed  bool
 	rolledBack bool
+	beginCount int
 }
 
 type testTx struct {
@@ -21,6 +22,7 @@ type testTx struct {
 }
 
 func (a *testTxAdapter) BeginTx(_ context.Context) (DatabaseTx, error) {
+	a.beginCount++
 	tx := &testTx{
 		parent:            a,
 		testMemoryAdapter: testMemoryAdapter{tables: make(map[SchemaTableName]*testMemTable)},
@@ -127,4 +129,22 @@ func TestWithTransaction_ContextPropagation(t *testing.T) {
 	})
 
 	require.NoError(t, err)
+}
+
+func TestWithTransaction_NestedUsesExistingTransaction(t *testing.T) {
+	t.Parallel()
+
+	l, adapter := newTestLimenWithTxAdapter(t)
+
+	err := l.core.WithTransaction(context.Background(), func(ctx context.Context) error {
+		return l.core.WithTransaction(ctx, func(nestedCtx context.Context) error {
+			assert.Same(t, getTxFromContext(ctx), getTxFromContext(nestedCtx))
+			return nil
+		})
+	})
+
+	require.NoError(t, err)
+	assert.Equal(t, 1, adapter.beginCount)
+	assert.True(t, adapter.committed)
+	assert.False(t, adapter.rolledBack)
 }

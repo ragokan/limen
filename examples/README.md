@@ -33,3 +33,12 @@ DATABASE_URL="postgres://..." go run ./examples/adapters/sql
 | `adapters/sql` | `database/sql` | credential-password | -- |
 
 The `basic` and `gin` examples also include a custom `GET /api/profile` endpoint that demonstrates how to use `auth.GetSession(r)` to read the authenticated user outside of Limen's built-in routes.
+
+## PostgreSQL 18
+
+For local compatibility checks, run the repository helper from the repository
+root:
+
+```bash
+./scripts/test-postgres18.sh
+```

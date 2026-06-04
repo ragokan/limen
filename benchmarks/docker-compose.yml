@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: ${LIMEN_POSTGRES_IMAGE:-postgres:latest}
+    pull_policy: always
+    ports:
+      - "55432:5432"
+    environment:
+      POSTGRES_USER: limen
+      POSTGRES_PASSWORD: limen
+      POSTGRES_DB: limen_bench
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U limen -d limen_bench"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: ${LIMEN_REDIS_IMAGE:-redis:latest}
+    pull_policy: always
+    ports:
+      - "56379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 30

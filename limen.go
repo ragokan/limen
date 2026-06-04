@@ -103,6 +103,7 @@ func (a *Limen) Handler() http.Handler {
 	globalMiddlewares := prepareGlobalMiddlewares(config, httpCore, a.config.Plugins)
 
 	router := newRouter(httpCore.Responder, globalMiddlewares...)
+	router.maxBodyBytes = config.maxBodyBytes
 	if config.hooks != nil {
 		router.AddHooks(config.hooks)
 	}

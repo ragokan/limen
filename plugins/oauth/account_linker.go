@@ -209,64 +209,50 @@ func (o *oauthPlugin) decryptToken(cipher string) (string, error) {
 }
 
 func (o *oauthPlugin) encryptTokens(info *limen.OAuthAccountProfile) (*OAuthTokens, error) {
+	tokens := &OAuthTokens{
+		AccessToken:  info.AccessToken,
+		RefreshToken: info.RefreshToken,
+		IDToken:      info.IDToken,
+	}
 	if o.config.disableTokensEncryption {
-		return &OAuthTokens{
-			AccessToken:  info.AccessToken,
-			RefreshToken: info.RefreshToken,
-			IDToken:      info.IDToken,
-		}, nil
+		return tokens, nil
 	}
 
 	if o.config.encryptTokens != nil {
-		return o.config.encryptTokens(o.config.secret, &OAuthTokens{
-			AccessToken:  info.AccessToken,
-			RefreshToken: info.RefreshToken,
-			IDToken:      info.IDToken,
-		})
+		return o.config.encryptTokens(o.config.secret, tokens)
 	}
-	access, err := o.encryptToken(info.AccessToken)
-	if err != nil {
-		return nil, err
-	}
-	refresh, err := o.encryptToken(info.RefreshToken)
-	if err != nil {
-		return nil, err
-	}
-	idToken, err := o.encryptToken(info.IDToken)
-	if err != nil {
-		return nil, err
-	}
-	return &OAuthTokens{AccessToken: access, RefreshToken: refresh, IDToken: idToken}, nil
+	return transformOAuthTokens(tokens, o.encryptToken)
 }
 
 func (o *oauthPlugin) decryptTokens(account *limen.Account) (*OAuthTokens, error) {
+	tokens := &OAuthTokens{
+		AccessToken:  account.AccessToken,
+		RefreshToken: account.RefreshToken,
+		IDToken:      account.IDToken,
+	}
 	if o.config.disableTokensEncryption {
-		return &OAuthTokens{
-			AccessToken:  account.AccessToken,
-			RefreshToken: account.RefreshToken,
-			IDToken:      account.IDToken,
-		}, nil
+		return tokens, nil
 	}
 
 	if o.config.decryptTokens != nil {
-		return o.config.decryptTokens(o.config.secret, &OAuthTokens{
-			AccessToken:  account.AccessToken,
-			RefreshToken: account.RefreshToken,
-			IDToken:      account.IDToken,
-		})
+		return o.config.decryptTokens(o.config.secret, tokens)
 	}
 
-	access, err := o.decryptToken(account.AccessToken)
+	return transformOAuthTokens(tokens, o.decryptToken)
+}
+
+func transformOAuthTokens(tokens *OAuthTokens, transform func(string) (string, error)) (*OAuthTokens, error) {
+	access, err := transform(tokens.AccessToken)
 	if err != nil {
 		return nil, err
 	}
 
-	refresh, err := o.decryptToken(account.RefreshToken)
+	refresh, err := transform(tokens.RefreshToken)
 	if err != nil {
 		return nil, err
 	}
 
-	idToken, err := o.decryptToken(account.IDToken)
+	idToken, err := transform(tokens.IDToken)
 	if err != nil {
 		return nil, err
 	}

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -14,6 +15,7 @@ type rateLimiter struct {
 	store    RateLimiterStore
 	httpCore *LimenHTTPCore
 	rules    []*RateLimitRule
+	locks    [lockStripeCount]sync.Mutex
 }
 
 func newRateLimiter(config *RateLimiterConfig, httpCore *LimenHTTPCore, rules map[string]*RateLimitRule) *rateLimiter {
@@ -41,6 +43,10 @@ func determineRateLimiterStore(config *RateLimiterConfig, core *LimenCore) RateL
 }
 
 func (r *rateLimiter) Check(ctx context.Context, key string, rule *RateLimitRule) (time.Duration, error) {
+	lock := r.lockKey(key)
+	lock.Lock()
+	defer lock.Unlock()
+
 	limit, err := r.store.Get(ctx, key)
 
 	if err == ErrRateLimitNotFound {
@@ -64,6 +70,10 @@ func (r *rateLimiter) Check(ctx context.Context, key string, rule *RateLimitRule
 		return 0, err
 	}
 	return remainingTime, nil
+}
+
+func (r *rateLimiter) lockKey(key string) *sync.Mutex {
+	return &r.locks[lockStripeIndex(key)]
 }
 
 func (r *rateLimiter) createNewLimit(ctx context.Context, key string, window time.Duration) (time.Duration, error) {

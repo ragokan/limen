@@ -3,13 +3,16 @@ package limen
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"sync"
 	"time"
 )
 
 type cacheSessionStore struct {
 	cache  CacheAdapter
 	prefix string
+	locks  [lockStripeCount]sync.Mutex
 }
 
 func newSecondarySessionStore(core *LimenCore) *cacheSessionStore {
@@ -20,11 +23,11 @@ func newSecondarySessionStore(core *LimenCore) *cacheSessionStore {
 }
 
 func (s *cacheSessionStore) sessionKey(token string) string {
-	return fmt.Sprintf("%s:session:t:%s", s.prefix, token)
+	return s.prefix + ":session:t:" + token
 }
 
 func (s *cacheSessionStore) userSessionsKey(userID any) string {
-	return fmt.Sprintf("%s:session:u:%v", s.prefix, userID)
+	return s.prefix + ":session:u:" + fmt.Sprint(userID)
 }
 
 func (s *cacheSessionStore) Get(ctx context.Context, token string) (*Session, error) {
@@ -58,7 +61,7 @@ func (s *cacheSessionStore) Set(ctx context.Context, session *Session) error {
 func (s *cacheSessionStore) Delete(ctx context.Context, token string) error {
 	sess, err := s.Get(ctx, token)
 	if err != nil {
-		return err
+		return nil
 	}
 
 	if err := s.cache.Delete(ctx, s.sessionKey(token)); err != nil {
@@ -69,17 +72,30 @@ func (s *cacheSessionStore) Delete(ctx context.Context, token string) error {
 }
 
 func (s *cacheSessionStore) ListByUserID(ctx context.Context, userID any) ([]Session, error) {
-	return s.getUserSessions(ctx, userID)
+	lock := s.lockUser(userID)
+	lock.Lock()
+	defer lock.Unlock()
+	sessions, err := s.getUserSessions(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return s.pruneUserSessions(ctx, userID, sessions)
 }
 
 func (s *cacheSessionStore) DeleteByUserID(ctx context.Context, userID any) error {
+	lock := s.lockUser(userID)
+	lock.Lock()
+	defer lock.Unlock()
+
 	sessions, err := s.getUserSessions(ctx, userID)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	for _, sess := range sessions {
-		_ = s.cache.Delete(ctx, s.sessionKey(sess.Token))
+		if err := s.cache.Delete(ctx, s.sessionKey(sess.Token)); err != nil {
+			return err
+		}
 	}
 
 	return s.cache.Delete(ctx, s.userSessionsKey(userID))
@@ -88,6 +104,9 @@ func (s *cacheSessionStore) DeleteByUserID(ctx context.Context, userID any) erro
 func (s *cacheSessionStore) getUserSessions(ctx context.Context, userID any) ([]Session, error) {
 	data, err := s.cache.Get(ctx, s.userSessionsKey(userID))
 	if err != nil {
+		if errors.Is(err, ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -99,6 +118,10 @@ func (s *cacheSessionStore) getUserSessions(ctx context.Context, userID any) ([]
 }
 
 func (s *cacheSessionStore) addToUserIndex(ctx context.Context, session *Session) error {
+	lock := s.lockUser(session.UserID)
+	lock.Lock()
+	defer lock.Unlock()
+
 	sessions, _ := s.getUserSessions(ctx, session.UserID)
 
 	for i, sess := range sessions {
@@ -113,6 +136,10 @@ func (s *cacheSessionStore) addToUserIndex(ctx context.Context, session *Session
 }
 
 func (s *cacheSessionStore) removeFromUserIndex(ctx context.Context, userID any, token string) error {
+	lock := s.lockUser(userID)
+	lock.Lock()
+	defer lock.Unlock()
+
 	sessions, err := s.getUserSessions(ctx, userID)
 	if err != nil {
 		return nil
@@ -133,9 +160,58 @@ func (s *cacheSessionStore) removeFromUserIndex(ctx context.Context, userID any,
 }
 
 func (s *cacheSessionStore) saveUserIndex(ctx context.Context, userID any, sessions []Session) error {
+	if len(sessions) == 0 {
+		return s.cache.Delete(ctx, s.userSessionsKey(userID))
+	}
 	data, err := json.Marshal(sessions)
 	if err != nil {
 		return err
 	}
-	return s.cache.Set(ctx, s.userSessionsKey(userID), data, 0)
+	return s.cache.Set(ctx, s.userSessionsKey(userID), data, sessionsTTL(sessions))
+}
+
+func (s *cacheSessionStore) pruneUserSessions(ctx context.Context, userID any, sessions []Session) ([]Session, error) {
+	if len(sessions) == 0 {
+		return nil, nil
+	}
+	now := time.Now()
+	live := sessions[:0]
+	for _, sess := range sessions {
+		if !sess.ExpiresAt.After(now) {
+			continue
+		}
+		exists, err := s.cache.Has(ctx, s.sessionKey(sess.Token))
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			live = append(live, sess)
+		}
+	}
+	if len(live) != len(sessions) {
+		if err := s.saveUserIndex(ctx, userID, live); err != nil {
+			return nil, err
+		}
+	}
+	return live, nil
+}
+
+func sessionsTTL(sessions []Session) time.Duration {
+	var maxTTL time.Duration
+	now := time.Now()
+	for _, sess := range sessions {
+		ttl := time.Until(sess.ExpiresAt)
+		if ttl <= 0 {
+			continue
+		}
+		if expiresIn := sess.ExpiresAt.Sub(now); expiresIn > maxTTL {
+			maxTTL = expiresIn
+		}
+	}
+	return maxTTL
+}
+
+func (s *cacheSessionStore) lockUser(userID any) *sync.Mutex {
+	key := fmt.Sprint(userID)
+	return &s.locks[lockStripeIndex(key)]
 }

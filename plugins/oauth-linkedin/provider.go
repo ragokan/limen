@@ -70,12 +70,19 @@ func (l *linkedInProvider) PKCEEnabled() bool {
 	return false
 }
 
+func (l *linkedInProvider) IDTokenNonceEnabled() bool {
+	return true
+}
+
 func (l *linkedInProvider) GetUserInfo(ctx context.Context, token *oauth.TokenResponse) (*oauth.ProviderUserInfo, error) {
 	if token.IDToken == "" {
 		return nil, errors.New("linkedin: id_token required; include openid scope")
 	}
 	claims, err := l.config.verifyIDToken(ctx, token.IDToken)
 	if err != nil {
+		return nil, fmt.Errorf("linkedin: %w", err)
+	}
+	if err := oauth.VerifyIDTokenNonce(claims, oauth.IDTokenNonce(ctx)); err != nil {
 		return nil, fmt.Errorf("linkedin: %w", err)
 	}
 

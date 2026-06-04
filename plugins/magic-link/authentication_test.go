@@ -45,7 +45,7 @@ func TestVerifyMagicLink_CreatesUserLazilyWhenAutoCreateEnabled(t *testing.T) {
 	assert.Equal(t, result.User.ID, user.ID)
 }
 
-func TestVerifyMagicLink_PropagatesAdditionalDataToNewUser(t *testing.T) {
+func TestVerifyMagicLink_DoesNotPersistAdditionalDataToNewUserByDefault(t *testing.T) {
 	t.Parallel()
 
 	var token string
@@ -66,8 +66,38 @@ func TestVerifyMagicLink_PropagatesAdditionalDataToNewUser(t *testing.T) {
 
 	user, err := plugin.dbAction.FindUserByEmail(context.Background(), "meta@test.com")
 	require.NoError(t, err)
+	assert.Nil(t, user.Raw()["first_name"])
+	assert.Nil(t, user.Raw()["role"])
+}
+
+func TestVerifyMagicLink_MapsAdditionalDataToNewUserWhenConfigured(t *testing.T) {
+	t.Parallel()
+
+	var token string
+	_, plugin := newTestLimenAndPlugin(t,
+		WithSendMagicLink(func(msg MagicLinkMessage) {
+			token = msg.Token
+		}),
+		WithMapMetaToUser(func(meta map[string]any) map[string]any {
+			return map[string]any{"first_name": meta["first_name"]}
+		}),
+	)
+
+	_, err := plugin.RequestMagicLink(context.Background(), "mapped-meta@test.com", &RequestMagicLinkOptions{
+		AdditionalData: map[string]any{
+			"first_name": "Ada",
+			"role":       "founder",
+		},
+	})
+	require.NoError(t, err)
+
+	_, _, err = plugin.VerifyMagicLink(context.Background(), token)
+	require.NoError(t, err)
+
+	user, err := plugin.dbAction.FindUserByEmail(context.Background(), "mapped-meta@test.com")
+	require.NoError(t, err)
 	assert.Equal(t, "Ada", user.Raw()["first_name"])
-	assert.Equal(t, "founder", user.Raw()["role"])
+	assert.Nil(t, user.Raw()["role"])
 }
 
 func TestVerifyMagicLink_MarksEmailVerifiedAndConsumesOneUse(t *testing.T) {

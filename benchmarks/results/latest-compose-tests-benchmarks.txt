@@ -1,0 +1,32 @@
+# Docker Compose latest tests and benchmarks
+Thu Jun  4 15:55:45 +03 2026
+go version go1.26.4 darwin/arm64
+Postgres:
+postgres (PostgreSQL) 18.4 (Debian 18.4-1.pgdg13+1)
+Redis:
+Starting Redis Server
+Redis server v=8.8.0 sha=00000000:1 malloc=jemalloc-5.3.0 bits=64 build=5ab495a1e5f6aa3e
+
+NAME                    IMAGE             COMMAND                  SERVICE    CREATED         STATUS                   PORTS
+benchmarks-postgres-1   postgres:latest   "docker-entrypoint.s…"   postgres   2 seconds ago   Up 2 seconds (healthy)   0.0.0.0:55432->5432/tcp, [::]:55432->5432/tcp
+benchmarks-redis-1      redis:latest      "docker-entrypoint.s…"   redis      2 seconds ago   Up 2 seconds (healthy)   0.0.0.0:56379->6379/tcp, [::]:56379->6379/tcp
+
+## PostgreSQL adapter tests
+ok  	github.com/ragokan/limen/adapters/sql	0.439s
+ok  	github.com/ragokan/limen/adapters/gorm	0.601s
+
+## Redis adapter tests
+ok  	github.com/ragokan/limen/adapters/redis	0.402s
+
+## Redis adapter benchmarks
+goos: darwin
+goarch: arm64
+pkg: github.com/ragokan/limen/adapters/redis
+cpu: Apple M4 Pro
+BenchmarkRedisCacheSetGet-14    	    9638	    118709 ns/op	     488 B/op	      16 allocs/op
+BenchmarkRedisCacheSetGet-14    	   10000	    114905 ns/op	     488 B/op	      16 allocs/op
+BenchmarkRedisCacheSetGet-14    	   10000	    119078 ns/op	     488 B/op	      16 allocs/op
+BenchmarkRedisCacheSetGet-14    	   10000	    126884 ns/op	     488 B/op	      16 allocs/op
+BenchmarkRedisCacheSetGet-14    	    8088	    161231 ns/op	     488 B/op	      16 allocs/op
+PASS
+ok  	github.com/ragokan/limen/adapters/redis	6.333s

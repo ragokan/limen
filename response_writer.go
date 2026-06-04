@@ -1,6 +1,9 @@
 package limen
 
-import "net/http"
+import (
+	"bytes"
+	"net/http"
+)
 
 type responseWriter struct {
 	http.ResponseWriter
@@ -18,6 +21,9 @@ type responseWriter struct {
 
 	redirectURL    string
 	redirectStatus int
+
+	directBody    bytes.Buffer
+	directWritten bool
 
 	// Auth result stored for hooks to access
 	authResult *AuthenticationResult
@@ -38,8 +44,8 @@ func (rw *responseWriter) Write(b []byte) (int, error) {
 		rw.WriteHeader(http.StatusOK)
 	}
 	if rw.deferWrite {
-		// Direct writes discarded when deferring - only Responder payloads captured
-		return len(b), nil
+		rw.directWritten = true
+		return rw.directBody.Write(b)
 	}
 	return rw.ResponseWriter.Write(b)
 }

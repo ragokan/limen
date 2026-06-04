@@ -1,0 +1,190 @@
+# Benchmark root
+Thu Jun  4 15:18:06 +03 2026
+go version go1.26.4 darwin/arm64
+3750816
+ M .golangci.yml
+ M README.md
+ M SECURITY.md
+ M account_introspect.go
+ M adapters/gorm/adapter.go
+ M adapters/gorm/adapter_test.go
+ M adapters/gorm/go.mod
+ M adapters/gorm/go.sum
+ M adapters/sql/adapter_test.go
+ M adapters/sql/go.mod
+ M adapters/sql/go.sum
+ M adapters/sql/query.go
+ M adapters/sql/where.go
+ M cmd/limen/README.md
+ M config.go
+ M constants.go
+ M context_transaction.go
+ M context_transaction_test.go
+ M cookie_manager.go
+ M database_helper.go
+ M database_helper_test.go
+ M errors.go
+ M examples/README.md
+ M http_config.go
+ M http_utils.go
+ M limen.go
+ M plugins/credential-password/hasher.go
+ M plugins/credential-password/hasher_test.go
+ M plugins/magic-link/authentication.go
+ M plugins/magic-link/authentication_test.go
+ M plugins/magic-link/handlers.go
+ M plugins/magic-link/handlers_test.go
+ M plugins/magic-link/state.go
+ M plugins/magic-link/types.go
+ M plugins/oauth-facebook/provider.go
+ M plugins/oauth-facebook/provider_test.go
+ M plugins/oauth-generic/provider.go
+ M plugins/oauth-generic/provider_test.go
+ M plugins/oauth-linkedin/provider.go
+ M plugins/oauth-linkedin/provider_test.go
+ M plugins/oauth-microsoft/provider.go
+ M plugins/oauth-microsoft/provider_test.go
+ M plugins/oauth-spotify/provider_test.go
+ M plugins/oauth-twitch/provider.go
+ M plugins/oauth-twitch/provider_test.go
+ M plugins/oauth/authentication.go
+ M plugins/oauth/authentication_test.go
+ M plugins/oauth/provider.go
+ M plugins/oauth/tokens.go
+ M plugins/oauth/tokens_test.go
+ M plugins/two-factor/backup_codes.go
+ M plugins/two-factor/backup_codes_test.go
+ M plugins/two-factor/plugin.go
+ M rate_limit_introspect.go
+ M rate_limiter.go
+ M rate_limiter_test.go
+ M response.go
+ M response_test.go
+ M response_writer.go
+ M router.go
+ M router_test.go
+ M session_introspect.go
+ M session_store_cache.go
+ M testing_support.go
+ M user_introspect.go
+ M utils.go
+ M validator.go
+ M validator_test.go
+ M verification_introspect.go
+?? adapters/gorm/postgres_integration_test.go
+?? adapters/redis/
+?? adapters/sql/postgres_integration_test.go
+?? benchmarks/
+?? database_benchmark_test.go
+?? rate_limiter_benchmark_test.go
+?? router_benchmark_test.go
+?? scripts/
+?? session_store_cache_test.go
+?? validator_benchmark_test.go
+
+goos: darwin
+goarch: arm64
+pkg: github.com/ragokan/limen
+cpu: Apple M4 Pro
+BenchmarkDatabaseFindOneUser-14             	  176293	      5861 ns/op	    9272 B/op	     205 allocs/op
+BenchmarkDatabaseFindOneUser-14             	  197818	      5803 ns/op	    9272 B/op	     205 allocs/op
+BenchmarkDatabaseFindOneUser-14             	  199563	      5661 ns/op	    9272 B/op	     205 allocs/op
+BenchmarkDatabaseFindOneUser-14             	  210963	      5775 ns/op	    9272 B/op	     205 allocs/op
+BenchmarkDatabaseFindOneUser-14             	  212145	      5328 ns/op	    9272 B/op	     205 allocs/op
+BenchmarkDatabaseFindOneUser-14             	  220281	      5419 ns/op	    9272 B/op	     205 allocs/op
+BenchmarkDatabaseFindOneUser-14             	  219235	      5174 ns/op	    9272 B/op	     205 allocs/op
+BenchmarkDatabaseFindOneUser-14             	  220293	      5302 ns/op	    9272 B/op	     205 allocs/op
+BenchmarkDatabaseFindOneUser-14             	  220292	      5497 ns/op	    9272 B/op	     205 allocs/op
+BenchmarkDatabaseFindOneUser-14             	  225504	      5433 ns/op	    9272 B/op	     205 allocs/op
+BenchmarkDatabaseFindManyUsers-14           	   78867	     15102 ns/op	   43584 B/op	     303 allocs/op
+BenchmarkDatabaseFindManyUsers-14           	   78355	     15300 ns/op	   43584 B/op	     303 allocs/op
+BenchmarkDatabaseFindManyUsers-14           	   80080	     15122 ns/op	   43584 B/op	     303 allocs/op
+BenchmarkDatabaseFindManyUsers-14           	   78718	     14766 ns/op	   43584 B/op	     303 allocs/op
+BenchmarkDatabaseFindManyUsers-14           	   84469	     14271 ns/op	   43584 B/op	     303 allocs/op
+BenchmarkDatabaseFindManyUsers-14           	   80047	     14712 ns/op	   43584 B/op	     303 allocs/op
+BenchmarkDatabaseFindManyUsers-14           	   78333	     15176 ns/op	   43584 B/op	     303 allocs/op
+BenchmarkDatabaseFindManyUsers-14           	   80082	     14957 ns/op	   43584 B/op	     303 allocs/op
+BenchmarkDatabaseFindManyUsers-14           	   82092	     15152 ns/op	   43584 B/op	     303 allocs/op
+BenchmarkDatabaseFindManyUsers-14           	   79609	     14740 ns/op	   43584 B/op	     303 allocs/op
+BenchmarkDatabaseCreateUser-14              	 1816428	       652.6 ns/op	    1236 B/op	      12 allocs/op
+BenchmarkDatabaseCreateUser-14              	 1841810	       661.3 ns/op	    1235 B/op	      12 allocs/op
+BenchmarkDatabaseCreateUser-14              	 1850257	       672.4 ns/op	    1235 B/op	      12 allocs/op
+BenchmarkDatabaseCreateUser-14              	 1818958	       677.8 ns/op	    1236 B/op	      12 allocs/op
+BenchmarkDatabaseCreateUser-14              	 1828165	       665.4 ns/op	    1235 B/op	      12 allocs/op
+BenchmarkDatabaseCreateUser-14              	 1787595	       677.5 ns/op	    1236 B/op	      12 allocs/op
+BenchmarkDatabaseCreateUser-14              	 1789298	       688.6 ns/op	    1236 B/op	      12 allocs/op
+BenchmarkDatabaseCreateUser-14              	 1783156	       671.8 ns/op	    1237 B/op	      12 allocs/op
+BenchmarkDatabaseCreateUser-14              	 1791746	       659.1 ns/op	    1236 B/op	      12 allocs/op
+BenchmarkDatabaseCreateUser-14              	 1916110	       662.2 ns/op	    1233 B/op	      12 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1234800	       971.7 ns/op	     701 B/op	      17 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1268078	       953.2 ns/op	     701 B/op	      17 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1256208	       959.3 ns/op	     701 B/op	      17 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1234782	       968.4 ns/op	     701 B/op	      17 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1248710	       960.4 ns/op	     701 B/op	      17 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1280761	       937.4 ns/op	     701 B/op	      17 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1259557	       950.0 ns/op	     701 B/op	      17 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1271544	       945.1 ns/op	     701 B/op	      17 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1250815	       957.8 ns/op	     701 B/op	      17 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1262409	       951.9 ns/op	     701 B/op	      17 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 1458000	       793.7 ns/op	     521 B/op	      13 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 1378682	       845.8 ns/op	     530 B/op	      13 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 1369851	       861.4 ns/op	     531 B/op	      13 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 1375600	       870.9 ns/op	     530 B/op	      13 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 1351272	       853.5 ns/op	     533 B/op	      13 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 1227397	       937.7 ns/op	     550 B/op	      13 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 1320002	       889.1 ns/op	     537 B/op	      13 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 1373998	       860.8 ns/op	     530 B/op	      13 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 1209642	       949.0 ns/op	     552 B/op	      13 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 1381356	       821.5 ns/op	     529 B/op	      13 allocs/op
+BenchmarkRouterStaticRoute-14               	 4680211	       254.6 ns/op	     880 B/op	       9 allocs/op
+BenchmarkRouterStaticRoute-14               	 4722351	       266.3 ns/op	     880 B/op	       9 allocs/op
+BenchmarkRouterStaticRoute-14               	 4283850	       265.4 ns/op	     880 B/op	       9 allocs/op
+BenchmarkRouterStaticRoute-14               	 4671588	       254.8 ns/op	     880 B/op	       9 allocs/op
+BenchmarkRouterStaticRoute-14               	 4816983	       250.7 ns/op	     880 B/op	       9 allocs/op
+BenchmarkRouterStaticRoute-14               	 4736241	       253.2 ns/op	     880 B/op	       9 allocs/op
+BenchmarkRouterStaticRoute-14               	 4744164	       252.9 ns/op	     880 B/op	       9 allocs/op
+BenchmarkRouterStaticRoute-14               	 4766426	       262.9 ns/op	     880 B/op	       9 allocs/op
+BenchmarkRouterStaticRoute-14               	 4677006	       261.4 ns/op	     880 B/op	       9 allocs/op
+BenchmarkRouterStaticRoute-14               	 4736454	       251.7 ns/op	     880 B/op	       9 allocs/op
+BenchmarkRouterParamRoute-14                	 3015196	       397.1 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterParamRoute-14                	 3049106	       389.3 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterParamRoute-14                	 3025353	       394.2 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterParamRoute-14                	 3076051	       391.5 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterParamRoute-14                	 3050032	       396.3 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterParamRoute-14                	 3092882	       390.2 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterParamRoute-14                	 3068119	       391.3 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterParamRoute-14                	 3067450	       390.7 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterParamRoute-14                	 3089776	       391.6 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterParamRoute-14                	 3086131	       391.5 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterWithMiddleware-14            	 3036024	       401.5 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterWithMiddleware-14            	 2689693	       428.3 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterWithMiddleware-14            	 3007708	       400.4 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterWithMiddleware-14            	 3051580	       395.3 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterWithMiddleware-14            	 3021405	       396.5 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterWithMiddleware-14            	 2853972	       419.1 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterWithMiddleware-14            	 2912071	       406.4 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterWithMiddleware-14            	 3073232	       394.5 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterWithMiddleware-14            	 3017739	       395.3 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterWithMiddleware-14            	 3038380	       396.2 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkValidatorEmail-14                  	 5788190	       204.5 ns/op	      24 B/op	       1 allocs/op
+BenchmarkValidatorEmail-14                  	 5887447	       203.7 ns/op	      24 B/op	       1 allocs/op
+BenchmarkValidatorEmail-14                  	 5930206	       202.8 ns/op	      24 B/op	       1 allocs/op
+BenchmarkValidatorEmail-14                  	 5918985	       202.7 ns/op	      24 B/op	       1 allocs/op
+BenchmarkValidatorEmail-14                  	 5863420	       204.9 ns/op	      24 B/op	       1 allocs/op
+BenchmarkValidatorEmail-14                  	 5830519	       205.6 ns/op	      24 B/op	       1 allocs/op
+BenchmarkValidatorEmail-14                  	 5876089	       204.9 ns/op	      24 B/op	       1 allocs/op
+BenchmarkValidatorEmail-14                  	 5930876	       208.3 ns/op	      24 B/op	       1 allocs/op
+BenchmarkValidatorEmail-14                  	 5808762	       205.0 ns/op	      24 B/op	       1 allocs/op
+BenchmarkValidatorEmail-14                  	 5912775	       204.0 ns/op	      24 B/op	       1 allocs/op
+BenchmarkValidateJSONBodyLookup-14          	126517467	         9.445 ns/op	       0 B/op	       0 allocs/op
+BenchmarkValidateJSONBodyLookup-14          	125223717	         9.536 ns/op	       0 B/op	       0 allocs/op
+BenchmarkValidateJSONBodyLookup-14          	128913313	         9.292 ns/op	       0 B/op	       0 allocs/op
+BenchmarkValidateJSONBodyLookup-14          	127085834	         9.458 ns/op	       0 B/op	       0 allocs/op
+BenchmarkValidateJSONBodyLookup-14          	127759941	         9.329 ns/op	       0 B/op	       0 allocs/op
+BenchmarkValidateJSONBodyLookup-14          	127891717	         9.402 ns/op	       0 B/op	       0 allocs/op
+BenchmarkValidateJSONBodyLookup-14          	128201521	         9.354 ns/op	       0 B/op	       0 allocs/op
+BenchmarkValidateJSONBodyLookup-14          	125693462	         9.570 ns/op	       0 B/op	       0 allocs/op
+BenchmarkValidateJSONBodyLookup-14          	124022541	         9.557 ns/op	       0 B/op	       0 allocs/op
+BenchmarkValidateJSONBodyLookup-14          	127060177	         9.388 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/ragokan/limen	120.475s

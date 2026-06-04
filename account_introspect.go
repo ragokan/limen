@@ -41,7 +41,7 @@ func (s *AccountSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefiniti
 			IsNullable:   false,
 			IsPrimaryKey: true,
 			Tags: map[string]string{
-				"json": "id",
+				schemaTagJSON: string(SchemaIDField),
 			},
 		},
 		{
@@ -51,7 +51,7 @@ func (s *AccountSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefiniti
 			IsNullable:   false,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "user_id",
+				schemaTagJSON: string(AccountSchemaUserIDField),
 			},
 		},
 		{
@@ -61,7 +61,7 @@ func (s *AccountSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefiniti
 			IsNullable:   false,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "provider",
+				schemaTagJSON: "provider",
 			},
 		},
 		{
@@ -71,7 +71,7 @@ func (s *AccountSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefiniti
 			IsNullable:   true,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "provider_account_id",
+				schemaTagJSON: "provider_account_id",
 			},
 		},
 		{
@@ -81,7 +81,7 @@ func (s *AccountSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefiniti
 			IsNullable:   false,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "access_token",
+				schemaTagJSON: "access_token",
 			},
 		},
 		{
@@ -91,7 +91,7 @@ func (s *AccountSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefiniti
 			IsNullable:   true,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "refresh_token",
+				schemaTagJSON: "refresh_token",
 			},
 		},
 		{
@@ -101,7 +101,7 @@ func (s *AccountSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefiniti
 			IsNullable:   true,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "access_token_expires_at",
+				schemaTagJSON: "access_token_expires_at",
 			},
 		},
 		{
@@ -111,7 +111,7 @@ func (s *AccountSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefiniti
 			IsNullable:   false,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "scope",
+				schemaTagJSON: "scope",
 			},
 		},
 		{
@@ -121,7 +121,7 @@ func (s *AccountSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefiniti
 			IsNullable:   true,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "id_token",
+				schemaTagJSON: "id_token",
 			},
 		},
 	}

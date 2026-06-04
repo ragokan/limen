@@ -59,14 +59,15 @@ func (o *oauthPlugin) RefreshAccessToken(ctx context.Context, userID any, provid
 		return nil, err
 	}
 
-	// Preserve the existing refresh token if the provider didn't issue a new one.
-	if tokenResp.RefreshToken == "" {
-		tokenResp.RefreshToken = tokens.RefreshToken
+	responseRefreshToken := tokenResp.RefreshToken
+	refreshTokenForStorage := tokenResp.RefreshToken
+	if refreshTokenForStorage == "" {
+		refreshTokenForStorage = tokens.RefreshToken
 	}
 
 	profile := &limen.OAuthAccountProfile{
 		AccessToken:  tokenResp.AccessToken,
-		RefreshToken: tokenResp.RefreshToken,
+		RefreshToken: refreshTokenForStorage,
 		IDToken:      tokenResp.IDToken,
 	}
 
@@ -104,7 +105,7 @@ func (o *oauthPlugin) RefreshAccessToken(ctx context.Context, userID any, provid
 
 	return &ActiveTokens{
 		AccessToken:          tokenResp.AccessToken,
-		RefreshToken:         tokenResp.RefreshToken,
+		RefreshToken:         responseRefreshToken,
 		IDToken:              tokenResp.IDToken,
 		AccessTokenExpiresAt: expiresAt,
 		Scope:                scope,

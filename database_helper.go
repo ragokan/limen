@@ -83,8 +83,11 @@ func GenerateVerificationAction(action, identifier string) string {
 }
 
 func ParseVerificationAction(action string) (string, string) {
-	parts := strings.Split(action, "::")
-	return parts[0], parts[1]
+	kind, identifier, ok := strings.Cut(action, "::")
+	if !ok {
+		return action, ""
+	}
+	return kind, identifier
 }
 
 func (core *LimenCore) Update(ctx context.Context, schema Schema, updatedData Model, conditions []Where) error {
@@ -187,6 +190,7 @@ func (core *LimenCore) Delete(ctx context.Context, schema Schema, conditions []W
 }
 
 func (core *LimenCore) FindMany(ctx context.Context, schema Schema, conditions []Where) ([]Model, error) {
+	conditions = applySoftDeleteFilter(schema, conditions)
 	db := core.getDB(ctx)
 	list, err := db.FindMany(ctx, schema.GetTableName(), conditions, nil)
 	if err != nil {
@@ -200,6 +204,7 @@ func (core *LimenCore) FindMany(ctx context.Context, schema Schema, conditions [
 }
 
 func (core *LimenCore) Count(ctx context.Context, schema Schema, conditions []Where) (int64, error) {
+	conditions = applySoftDeleteFilter(schema, conditions)
 	db := core.getDB(ctx)
 	return db.Count(ctx, schema.GetTableName(), conditions)
 }

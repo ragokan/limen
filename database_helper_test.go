@@ -194,6 +194,46 @@ func TestDatabaseHelper_Count(t *testing.T) {
 	assert.Equal(t, int64(3), count)
 }
 
+func TestDatabaseHelper_FindManyAndCountApplySoftDelete(t *testing.T) {
+	t.Parallel()
+
+	l := newTestLimen(t)
+	ctx := context.Background()
+	userSchema := l.core.Schema.User
+
+	seedUser(t, l, "deleted@test.com")
+	seedUser(t, l, "deleted@test.com")
+
+	err := l.core.Delete(ctx, userSchema, []Where{
+		Eq(userSchema.GetEmailField(), "deleted@test.com"),
+	})
+	require.NoError(t, err)
+
+	models, err := l.core.FindMany(ctx, userSchema, []Where{
+		Eq(userSchema.GetEmailField(), "deleted@test.com"),
+	})
+	require.NoError(t, err)
+	assert.Empty(t, models)
+
+	count, err := l.core.Count(ctx, userSchema, []Where{
+		Eq(userSchema.GetEmailField(), "deleted@test.com"),
+	})
+	require.NoError(t, err)
+	assert.Zero(t, count)
+}
+
+func TestParseVerificationAction(t *testing.T) {
+	t.Parallel()
+
+	action, identifier := ParseVerificationAction("reset::user::with::separator")
+	assert.Equal(t, "reset", action)
+	assert.Equal(t, "user::with::separator", identifier)
+
+	action, identifier = ParseVerificationAction("malformed")
+	assert.Equal(t, "malformed", action)
+	assert.Empty(t, identifier)
+}
+
 func TestDatabaseHelper_Exists(t *testing.T) {
 	t.Parallel()
 

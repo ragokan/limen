@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"maps"
 	"net/http"
@@ -66,6 +67,7 @@ type router struct {
 	beforeHooks      []Hook
 	afterHooks       []Hook
 	responder        *Responder // For final response writing after hooks
+	maxBodyBytes     int64
 }
 
 type RouteMetadata struct {
@@ -83,6 +85,7 @@ type route struct {
 	Description string
 	Middleware  []Middleware
 	Metadata    *RouteMetadata
+	wrapped     http.Handler
 }
 
 // RouteID is a unique identifier for each route
@@ -105,6 +108,7 @@ func newRouter(responder *Responder, globalMiddleware ...Middleware) *router {
 		},
 		globalMiddleware: globalMiddleware,
 		responder:        responder,
+		maxBodyBytes:     1 << 20,
 	}
 }
 
@@ -136,9 +140,18 @@ func (r *router) AddRoute(method HTTPMethod, pattern string, handler http.Handle
 		Middleware: middleware,
 		Metadata:   metadata,
 	}
+	if _, ok := methodIndexFor(method); !ok {
+		panic("unsupported HTTP method: " + string(method))
+	}
+	route.wrapped = r.buildRouteHandler(route)
 
 	segments := r.splitPath(pattern)
 	r.insertRoute(route, segments)
+}
+
+func methodIndexFor(method HTTPMethod) (int, bool) {
+	idx, ok := methodIndex[method]
+	return idx, ok
 }
 
 // Group creates a new router group with the given prefix and middleware.
@@ -165,7 +178,10 @@ func (r *router) insertRoute(route *route, segments []string) {
 		current = r.handleStaticSegment(current, segment)
 	}
 
-	methodIdx := methodIndex[route.Method]
+	methodIdx, ok := methodIndexFor(route.Method)
+	if !ok {
+		panic("unsupported HTTP method: " + string(route.Method))
+	}
 	current.routes[methodIdx] = route
 }
 
@@ -215,51 +231,79 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	http.NotFound(w, req)
 }
 
-// wrapHandler applies global middleware, route-specific middleware to a handler
-// and applies hooks to the request and response and this is where the request body is parsed and stored in the request context
-func (r *router) wrapHandler(handler http.HandlerFunc, routeMiddleware []Middleware, route *route) http.HandlerFunc {
-	allMiddleware := slices.Concat(r.globalMiddleware, routeMiddleware)
-	wrapped := r.applyMiddleware(allMiddleware, handler)
+// buildRouteHandler applies global and route-specific middleware once during route registration.
+func (r *router) buildRouteHandler(route *route) http.Handler {
+	allMiddleware := slices.Concat(r.globalMiddleware, route.Middleware)
+	return r.applyMiddleware(allMiddleware, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		r.serveRoute(w, req, route)
+	}))
+}
+
+// serveRoute applies hooks and body parsing after global middleware has accepted the request.
+func (r *router) serveRoute(w http.ResponseWriter, req *http.Request, route *route) {
 	hasAfterHooks := len(r.afterHooks) > 0
 
-	return func(w http.ResponseWriter, req *http.Request) {
-		req = parseAndStoreBody(req)
-
-		hookCtx := r.prepareHookContext(req, w, route)
-		if !r.runBeforeHooks(hookCtx) {
+	var err error
+	req, err = parseAndStoreBody(req, r.maxBodyBytes)
+	if errors.Is(err, errRequestBodyTooLarge) {
+		if r.responder != nil {
+			_ = r.responder.Error(w, req, NewLimenError("request body too large", http.StatusRequestEntityTooLarge, err))
 			return
 		}
+		http.Error(w, "request body too large", http.StatusRequestEntityTooLarge)
+		return
+	}
 
-		if hookCtx.bodyModified {
-			bodyBytes, _ := json.Marshal(hookCtx.modifiedData)
-			req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
-			req = req.WithContext(context.WithValue(req.Context(), bodyContextKey{}, hookCtx.modifiedData))
-			hookCtx.request = req
-		}
+	hookCtx := r.prepareHookContext(req, w, route)
+	if !r.runBeforeHooks(hookCtx) {
+		return
+	}
 
-		rw := &responseWriter{
-			ResponseWriter: w,
-			wroteHeader:    false,
-			deferWrite:     hasAfterHooks,
-		}
-		hookCtx.response = rw
+	if hookCtx.bodyModified {
+		bodyBytes, _ := json.Marshal(hookCtx.modifiedData)
+		req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+		req = req.WithContext(context.WithValue(req.Context(), bodyContextKey{}, hookCtx.modifiedData))
+		hookCtx.request = req
+	}
 
-		wrapped.ServeHTTP(rw, req)
+	rw := &responseWriter{
+		ResponseWriter: w,
+		wroteHeader:    false,
+		deferWrite:     hasAfterHooks,
+	}
+	hookCtx.response = rw
 
-		// Only run after hooks logic if we have them
-		if hasAfterHooks {
-			hookCtx.statusCode = rw.statusCode
-			r.runAfterHooks(hookCtx)
+	route.Handler(rw, req)
 
-			r.writeFinalResponse(rw, req)
-		}
+	if hasAfterHooks {
+		hookCtx.statusCode = rw.statusCode
+		r.runAfterHooks(hookCtx)
+
+		r.writeFinalResponse(rw, req)
 	}
 }
 
 // writeFinalResponse writes the final response after hooks have run
 func (r *router) writeFinalResponse(rw *responseWriter, req *http.Request) {
-	if !rw.written || r.responder == nil {
-		return // Handler didn't use Responder, response already sent
+	if rw.modified && r.responder != nil {
+		r.responder.JSON(rw.ResponseWriter, req, rw.modifiedStatus, rw.modifiedPayload)
+		return
+	}
+
+	if !rw.written {
+		if rw.directWritten {
+			status := rw.statusCode
+			if status == 0 {
+				status = http.StatusOK
+			}
+			rw.ResponseWriter.WriteHeader(status)
+			_, _ = rw.ResponseWriter.Write(rw.directBody.Bytes())
+		}
+		return
+	}
+
+	if r.responder == nil {
+		return
 	}
 
 	// Deferred redirect: send it on the real ResponseWriter so the browser follows it
@@ -271,12 +315,6 @@ func (r *router) writeFinalResponse(rw *responseWriter, req *http.Request) {
 	status := rw.statusCode
 	payload := rw.payload
 	isError := rw.isError
-
-	if rw.modified {
-		status = rw.modifiedStatus
-		payload = rw.modifiedPayload
-		isError = false // Modified responses are treated as success and rely on error type payload
-	}
 
 	if err, ok := payload.(error); ok || isError {
 		r.responder.Error(rw.ResponseWriter, req, err)
@@ -335,18 +373,17 @@ func (r *router) handleRoute(w http.ResponseWriter, req *http.Request, route *ro
 		req = req.WithContext(ctx)
 	}
 
-	wrappedHandler := r.wrapHandler(route.Handler, route.Middleware, route)
-	wrappedHandler(w, req)
+	route.wrapped.ServeHTTP(w, req)
 }
 
 // matchRoute searches the radix tree for a matching route
 func (r *router) matchRoute(segments []string, method HTTPMethod) (*route, map[string]string) {
 	current := r.root
-	params := make(map[string]string)
-	methodIdx := methodIndex[method]
+	var params map[string]string
+	methodIdx, hasMethod := methodIndexFor(method)
 	// track nearest ANY prefix
 	var lastAny *route
-	lastAnyParams := map[string]string{}
+	var lastAnyParams map[string]string
 
 	// check root for ANY (if you ever mount at "/")
 	if rt := current.routes[methodIndex[MethodANY]]; rt != nil {
@@ -364,6 +401,9 @@ func (r *router) matchRoute(segments []string, method HTTPMethod) (*route, map[s
 
 		if current.paramChild != nil {
 			current = current.paramChild
+			if params == nil {
+				params = make(map[string]string)
+			}
 			params[current.paramName] = segment
 			if rt := current.routes[methodIndex[MethodANY]]; rt != nil {
 				lastAny, lastAnyParams = rt, copyParams(params)
@@ -378,8 +418,10 @@ func (r *router) matchRoute(segments []string, method HTTPMethod) (*route, map[s
 		return nil, nil
 	}
 
-	if route := current.routes[methodIdx]; route != nil {
-		return route, params
+	if hasMethod {
+		if route := current.routes[methodIdx]; route != nil {
+			return route, params
+		}
 	}
 
 	if route := current.routes[methodIndex[MethodANY]]; route != nil {
@@ -394,6 +436,9 @@ func (r *router) matchRoute(segments []string, method HTTPMethod) (*route, map[s
 }
 
 func copyParams(m map[string]string) map[string]string {
+	if len(m) == 0 {
+		return nil
+	}
 	cp := make(map[string]string, len(m))
 	maps.Copy(cp, m)
 	return cp

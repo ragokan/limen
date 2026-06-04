@@ -2,6 +2,7 @@ package magiclink
 
 import (
 	"errors"
+	"maps"
 	"net/http"
 	"net/url"
 
@@ -36,9 +37,14 @@ func (h *magicLinkHandlers) RequestMagicLink(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	additionalData, ok := body["meta"].(map[string]any)
-	if !ok {
-		additionalData = map[string]any{}
+	additionalData := map[string]any{}
+	if meta, exists := body["meta"]; exists && meta != nil {
+		metaMap, ok := meta.(map[string]any)
+		if !ok {
+			h.responder.Error(w, r, limen.NewLimenError("meta must be an object", http.StatusUnprocessableEntity, nil))
+			return
+		}
+		additionalData = maps.Clone(metaMap)
 	}
 
 	_, err = h.plugin.RequestMagicLink(r.Context(), body["email"].(string), &RequestMagicLinkOptions{

@@ -10,6 +10,8 @@ The Limen CLI tool provides code generation capabilities for Limen authenticatio
 
 - Go 1.25 or later
 - Limen project with initialized schemas (`.limen/schemas.json`)
+- PostgreSQL 18 compatibility can be checked from the repository root with
+  `./scripts/test-postgres18.sh`
 
 ### Build from Source
 

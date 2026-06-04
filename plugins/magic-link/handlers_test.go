@@ -52,6 +52,19 @@ func TestRequestMagicLinkHandler_RejectsUntrustedRedirectURIs(t *testing.T) {
 	}
 }
 
+func TestRequestMagicLinkHandler_RejectsNonObjectMeta(t *testing.T) {
+	t.Parallel()
+
+	l, _ := newTestLimenAndPlugin(t)
+
+	req := newJSONRequest(t, http.MethodPost, "/auth/magic-link/signin", `{"email":"u@test.com","meta":"role=admin"}`)
+	w := httptest.NewRecorder()
+	l.Handler().ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusUnprocessableEntity, w.Code)
+	assert.Contains(t, w.Body.String(), "meta must be an object")
+}
+
 func TestVerifyMagicLinkHandler_RedirectSelection(t *testing.T) {
 	t.Parallel()
 

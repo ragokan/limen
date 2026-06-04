@@ -11,6 +11,7 @@ type config struct {
 	autoCreateUser    bool
 	maxUses           int
 	markEmailVerified bool
+	mapMetaToUser     func(map[string]any) map[string]any
 }
 
 // ConfigOption configures the magic-link plugin.
@@ -55,6 +56,15 @@ func WithMaxUses(maxUses int) ConfigOption {
 func WithMarkEmailVerified(markEmailVerified bool) ConfigOption {
 	return func(c *config) {
 		c.markEmailVerified = markEmailVerified
+	}
+}
+
+// WithMapMetaToUser maps magic-link metadata into fields used when auto-creating
+// a new user. By default, request metadata is kept in magic-link state only and
+// is not persisted to the user record.
+func WithMapMetaToUser(mapper func(map[string]any) map[string]any) ConfigOption {
+	return func(c *config) {
+		c.mapMetaToUser = mapper
 	}
 }
 

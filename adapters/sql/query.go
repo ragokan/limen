@@ -33,7 +33,10 @@ func (a *Adapter) Create(ctx context.Context, tableName limen.SchemaTableName, d
 }
 
 func (a *Adapter) FindOne(ctx context.Context, tableName limen.SchemaTableName, conditions []limen.Where, orderBy []limen.OrderBy) (map[string]any, error) {
-	whereSQL, args := a.buildWhere(conditions)
+	whereSQL, args, err := a.buildWhere(conditions)
+	if err != nil {
+		return nil, err
+	}
 	query := "SELECT * FROM " + a.quoteIdent(string(tableName))
 	if whereSQL != "" {
 		query += " WHERE " + whereSQL
@@ -41,6 +44,9 @@ func (a *Adapter) FindOne(ctx context.Context, tableName limen.SchemaTableName, 
 	if len(orderBy) > 0 {
 		parts := make([]string, len(orderBy))
 		for i, o := range orderBy {
+			if err := validateOrderByDirection(o.Direction); err != nil {
+				return nil, err
+			}
 			parts[i] = a.quoteIdent(o.Column) + " " + string(o.Direction)
 		}
 		query += " ORDER BY " + strings.Join(parts, ", ")
@@ -50,7 +56,7 @@ func (a *Adapter) FindOne(ctx context.Context, tableName limen.SchemaTableName, 
 
 	row := a.getQueryer().QueryRowxContext(ctx, query, args...)
 	dest := make(map[string]any)
-	err := row.MapScan(dest)
+	err = row.MapScan(dest)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, limen.ErrRecordNotFound
 	}
@@ -64,7 +70,10 @@ func (a *Adapter) FindOne(ctx context.Context, tableName limen.SchemaTableName, 
 }
 
 func (a *Adapter) FindMany(ctx context.Context, tableName limen.SchemaTableName, conditions []limen.Where, options *limen.QueryOptions) ([]map[string]any, error) {
-	whereSQL, args := a.buildWhere(conditions)
+	whereSQL, args, err := a.buildWhere(conditions)
+	if err != nil {
+		return nil, err
+	}
 	query := "SELECT * FROM " + a.quoteIdent(string(tableName))
 	if whereSQL != "" {
 		query += " WHERE " + whereSQL
@@ -72,6 +81,9 @@ func (a *Adapter) FindMany(ctx context.Context, tableName limen.SchemaTableName,
 	if options != nil && len(options.OrderBy) > 0 {
 		parts := make([]string, len(options.OrderBy))
 		for i, o := range options.OrderBy {
+			if err := validateOrderByDirection(o.Direction); err != nil {
+				return nil, err
+			}
 			parts[i] = a.quoteIdent(o.Column) + " " + string(o.Direction)
 		}
 		query += " ORDER BY " + strings.Join(parts, ", ")
@@ -118,11 +130,16 @@ func (a *Adapter) Update(ctx context.Context, tableName limen.SchemaTableName, c
 		setParts = append(setParts, a.quoteIdent(k)+" = ?")
 		setArgs = append(setArgs, updates[k])
 	}
-	whereSQL, whereArgs := a.buildWhere(conditions)
-	args := append(setArgs, whereArgs...)
+	whereSQL, whereArgs, err := a.buildWhere(conditions)
+	if err != nil {
+		return err
+	}
+	args := make([]any, 0, len(setArgs)+len(whereArgs))
+	args = append(args, setArgs...)
+	args = append(args, whereArgs...)
 	query := "UPDATE " + a.quoteIdent(string(tableName)) + " SET " + strings.Join(setParts, ", ") + " WHERE " + whereSQL
 	query = a.rebind(query)
-	_, err := a.getExt().ExecContext(ctx, query, args...)
+	_, err = a.getExt().ExecContext(ctx, query, args...)
 	return err
 }
 
@@ -130,15 +147,21 @@ func (a *Adapter) Delete(ctx context.Context, tableName limen.SchemaTableName, c
 	if len(conditions) == 0 {
 		return fmt.Errorf("delete: conditions required to prevent accidental table-wide delete")
 	}
-	whereSQL, args := a.buildWhere(conditions)
+	whereSQL, args, err := a.buildWhere(conditions)
+	if err != nil {
+		return err
+	}
 	query := "DELETE FROM " + a.quoteIdent(string(tableName)) + " WHERE " + whereSQL
 	query = a.rebind(query)
-	_, err := a.getExt().ExecContext(ctx, query, args...)
+	_, err = a.getExt().ExecContext(ctx, query, args...)
 	return err
 }
 
 func (a *Adapter) Exists(ctx context.Context, tableName limen.SchemaTableName, conditions []limen.Where) (bool, error) {
-	whereSQL, args := a.buildWhere(conditions)
+	whereSQL, args, err := a.buildWhere(conditions)
+	if err != nil {
+		return false, err
+	}
 	query := "SELECT 1 FROM " + a.quoteIdent(string(tableName))
 	if whereSQL != "" {
 		query += " WHERE " + whereSQL
@@ -147,7 +170,7 @@ func (a *Adapter) Exists(ctx context.Context, tableName limen.SchemaTableName, c
 	query = a.rebind(query)
 
 	var dummy int
-	err := a.getQueryer().QueryRowContext(ctx, query, args...).Scan(&dummy)
+	err = a.getQueryer().QueryRowContext(ctx, query, args...).Scan(&dummy)
 	if errors.Is(err, sql.ErrNoRows) {
 		return false, nil
 	}
@@ -158,7 +181,10 @@ func (a *Adapter) Exists(ctx context.Context, tableName limen.SchemaTableName, c
 }
 
 func (a *Adapter) Count(ctx context.Context, tableName limen.SchemaTableName, conditions []limen.Where) (int64, error) {
-	whereSQL, args := a.buildWhere(conditions)
+	whereSQL, args, err := a.buildWhere(conditions)
+	if err != nil {
+		return 0, err
+	}
 	query := "SELECT COUNT(*) FROM " + a.quoteIdent(string(tableName))
 	if whereSQL != "" {
 		query += " WHERE " + whereSQL
@@ -166,6 +192,6 @@ func (a *Adapter) Count(ctx context.Context, tableName limen.SchemaTableName, co
 	query = a.rebind(query)
 
 	var n int64
-	err := a.getQueryer().QueryRowContext(ctx, query, args...).Scan(&n)
+	err = a.getQueryer().QueryRowContext(ctx, query, args...).Scan(&n)
 	return n, err
 }

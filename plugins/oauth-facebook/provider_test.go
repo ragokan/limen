@@ -18,6 +18,9 @@ func TestGetUserInfo_EmailVerificationUnknown(t *testing.T) {
 		if got := req.Header.Get("Authorization"); got != "Bearer access-token" {
 			t.Fatalf("Authorization = %q", got)
 		}
+		if got := req.URL.String(); got != facebookUserInfoURL {
+			t.Fatalf("URL = %q, want %q", got, facebookUserInfoURL)
+		}
 		return &http.Response{
 			StatusCode: http.StatusOK,
 			Header:     make(http.Header),

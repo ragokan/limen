@@ -28,7 +28,7 @@ func (r *RateLimitSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefini
 			IsNullable:   false,
 			IsPrimaryKey: true,
 			Tags: map[string]string{
-				"json": "id",
+				schemaTagJSON: string(SchemaIDField),
 			},
 		},
 		{
@@ -38,7 +38,7 @@ func (r *RateLimitSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefini
 			IsNullable:   false,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "key",
+				schemaTagJSON: string(RateLimitSchemaKeyField),
 			},
 		},
 		{
@@ -48,7 +48,7 @@ func (r *RateLimitSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefini
 			IsNullable:   false,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "count",
+				schemaTagJSON: "count",
 			},
 		},
 		{
@@ -58,7 +58,7 @@ func (r *RateLimitSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefini
 			IsNullable:   false,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "last_request_at",
+				schemaTagJSON: "last_request_at",
 			},
 		},
 	}

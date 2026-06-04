@@ -8,6 +8,8 @@ import (
 const (
 	shortSessionCookieName = "limen_short_session"
 	shortSessionMaxAge     = 1 * time.Hour // 1 hour
+	defaultHTTPBasePath    = "/auth"
+	defaultSessionCookie   = "limen_session"
 )
 
 type HTTPConfigOption func(*httpConfig)
@@ -38,6 +40,8 @@ type httpConfig struct {
 	originCheck bool
 	// CookieConfig: configuration for cookies
 	cookieConfig *cookieConfig
+	// maxBodyBytes caps JSON/form request bodies parsed by Limen.
+	maxBodyBytes int64
 }
 
 type cookieConfig struct {
@@ -82,7 +86,7 @@ type PluginHTTPOverride struct {
 func NewDefaultHTTPConfig(opts ...HTTPConfigOption) *httpConfig {
 	config := &httpConfig{
 		middleware:    []Middleware{},
-		basePath:      "/auth",
+		basePath:      defaultHTTPBasePath,
 		overrides:     map[string]*PluginHTTPOverride{},
 		disabledPaths: []string{},
 		responseEnvelope: &responseEnvelopeConfig{
@@ -93,7 +97,7 @@ func NewDefaultHTTPConfig(opts ...HTTPConfigOption) *httpConfig {
 		csrfProtection: true,
 		originCheck:    true,
 		cookieConfig: &cookieConfig{
-			sessionCookieName: "limen_session",
+			sessionCookieName: defaultSessionCookie,
 			path:              "/",
 			secure:            true,
 			httpOnly:          true,
@@ -104,11 +108,18 @@ func NewDefaultHTTPConfig(opts ...HTTPConfigOption) *httpConfig {
 			},
 			crossDomain: false,
 		},
+		maxBodyBytes: 1 << 20,
 	}
 	for _, opt := range opts {
 		opt(config)
 	}
 	return config
+}
+
+func WithHTTPMaxBodyBytes(maxBodyBytes int64) HTTPConfigOption {
+	return func(c *httpConfig) {
+		c.maxBodyBytes = maxBodyBytes
+	}
 }
 
 func WithHTTPBasePath(basePath string) HTTPConfigOption {

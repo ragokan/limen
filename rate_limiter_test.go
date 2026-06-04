@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"regexp"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"testing/synctest"
 	"time"
@@ -82,6 +84,35 @@ func TestRateLimiter_Check_ExceedLimit(t *testing.T) {
 
 	_, err := rl.Check(context.Background(), "exceed-key", rule)
 	assert.ErrorIs(t, err, ErrRateLimitExceeded)
+}
+
+func TestRateLimiter_Check_ConcurrentLimit(t *testing.T) {
+	t.Parallel()
+
+	rl := newTestRateLimiter(t, 1, time.Minute)
+	rule := NewRateLimitRule("", 1, time.Minute)
+
+	var allowed atomic.Int64
+	var unexpected atomic.Int64
+	var wg sync.WaitGroup
+	for range 50 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_, err := rl.Check(context.Background(), "concurrent-key", rule)
+			if err == nil {
+				allowed.Add(1)
+				return
+			}
+			if err != ErrRateLimitExceeded {
+				unexpected.Add(1)
+			}
+		}()
+	}
+	wg.Wait()
+
+	assert.Equal(t, int64(1), allowed.Load())
+	assert.Zero(t, unexpected.Load())
 }
 
 func TestRateLimiter_Check_WindowReset(t *testing.T) {

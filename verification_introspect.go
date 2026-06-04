@@ -34,7 +34,7 @@ func (v *VerificationSchema) getDefaultColumns(config *SchemaConfig) []ColumnDef
 			IsNullable:   false,
 			IsPrimaryKey: true,
 			Tags: map[string]string{
-				"json": "id",
+				schemaTagJSON: string(SchemaIDField),
 			},
 		},
 		{
@@ -44,7 +44,7 @@ func (v *VerificationSchema) getDefaultColumns(config *SchemaConfig) []ColumnDef
 			IsNullable:   false,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "subject",
+				schemaTagJSON: string(VerificationSchemaSubjectField),
 			},
 		},
 		{
@@ -54,7 +54,7 @@ func (v *VerificationSchema) getDefaultColumns(config *SchemaConfig) []ColumnDef
 			IsNullable:   false,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "value",
+				schemaTagJSON: string(VerificationSchemaValueField),
 			},
 		},
 		{
@@ -64,7 +64,7 @@ func (v *VerificationSchema) getDefaultColumns(config *SchemaConfig) []ColumnDef
 			IsNullable:   false,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "expires_at",
+				schemaTagJSON: string(VerificationSchemaExpiresAtField),
 			},
 		},
 	}

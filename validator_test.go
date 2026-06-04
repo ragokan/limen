@@ -103,6 +103,7 @@ func TestEmail(t *testing.T) {
 		{"valid email", "valid@example.com", false},
 		{"empty string skipped", "", false},
 		{"nil skipped", nil, false},
+		{"non-string rejected", 123, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -274,6 +275,6 @@ func newValidatorTestRequest(t *testing.T, body string) *http.Request {
 	t.Helper()
 	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/test", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
-	req = parseAndStoreBody(req)
+	req, _ = parseAndStoreBody(req, 1<<20)
 	return req
 }

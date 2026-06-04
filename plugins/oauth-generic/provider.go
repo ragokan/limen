@@ -66,6 +66,10 @@ func (g *genericProvider) OAuth2Config() (*oauth2.Config, []oauth2.AuthCodeOptio
 	return cfg, authOpts
 }
 
+func (g *genericProvider) IDTokenNonceEnabled() bool {
+	return g.config.verifyIDToken != nil || g.config.issuer != ""
+}
+
 func (g *genericProvider) GetUserInfo(ctx context.Context, token *oauth.TokenResponse) (*oauth.ProviderUserInfo, error) {
 	if g.config.getUserInfo != nil {
 		return g.config.getUserInfo(ctx, token)
@@ -76,7 +80,7 @@ func (g *genericProvider) GetUserInfo(ctx context.Context, token *oauth.TokenRes
 			return nil, err
 		}
 		if token.IDToken != "" && g.config.verifyIDToken != nil {
-			claims, err := g.config.verifyIDToken(ctx, token.IDToken)
+			claims, err := g.verifiedIDTokenClaims(ctx, token.IDToken)
 			if err != nil {
 				return nil, err
 			}
@@ -103,7 +107,7 @@ func (g *genericProvider) userInfoFromIDToken(ctx context.Context, idToken strin
 		return nil, fmt.Errorf("id_token verifier is not configured")
 	}
 
-	claims, err := verifier(ctx, idToken)
+	claims, err := g.verifiedIDTokenClaims(ctx, idToken)
 	if err != nil {
 		return nil, err
 	}
@@ -113,6 +117,23 @@ func (g *genericProvider) userInfoFromIDToken(ctx context.Context, idToken strin
 	}
 	info.Raw = claims
 	return info, nil
+}
+
+func (g *genericProvider) verifiedIDTokenClaims(ctx context.Context, idToken string) (map[string]any, error) {
+	verifier := g.config.verifyIDToken
+	if verifier == nil {
+		return nil, fmt.Errorf("id_token verifier is not configured")
+	}
+	claims, err := verifier(ctx, idToken)
+	if err != nil {
+		return nil, err
+	}
+	if g.IDTokenNonceEnabled() {
+		if err := oauth.VerifyIDTokenNonce(claims, oauth.IDTokenNonce(ctx)); err != nil {
+			return nil, err
+		}
+	}
+	return claims, nil
 }
 
 func (g *genericProvider) fetchUserInfoFromURL(ctx context.Context, token *oauth.TokenResponse) (*oauth.ProviderUserInfo, error) {
@@ -144,15 +165,6 @@ func (g *genericProvider) fetchUserInfoFromURL(ctx context.Context, token *oauth
 	}
 	info.Raw = raw
 	return info, nil
-}
-
-func (g *genericProvider) BuildAuthorizationURL(ctx context.Context, state, codeVerifier, callbackRedirectURI string) (string, error) {
-	if g.config.buildAuthorizationURL != nil {
-		return g.config.buildAuthorizationURL(ctx, state, codeVerifier, callbackRedirectURI)
-	}
-	cfg, authOpts := g.OAuth2Config()
-	cfg.RedirectURL = callbackRedirectURI
-	return oauth.BuildAuthCodeURL(cfg, state, codeVerifier, authOpts...), nil
 }
 
 func (g *genericProvider) ExchangeAuthorizationCode(ctx context.Context, code, codeVerifier, redirectURI string) (*oauth.TokenResponse, error) {

@@ -45,6 +45,28 @@ func TestResponder_JSON_StringMessage(t *testing.T) {
 	assert.Contains(t, w.Body.String(), `"message":"success"`)
 }
 
+func TestResponderJSONNoBodyStatuses(t *testing.T) {
+	t.Parallel()
+
+	responder := newTestResponder(t)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", http.NoBody)
+
+	for _, status := range []int{http.StatusNoContent, http.StatusNotModified} {
+		t.Run(http.StatusText(status), func(t *testing.T) {
+			t.Parallel()
+
+			w := httptest.NewRecorder()
+
+			err := responder.JSON(w, req, status, nil)
+
+			assert.NoError(t, err)
+			assert.Equal(t, status, w.Code)
+			assert.Empty(t, w.Body.String())
+			assert.Empty(t, w.Header().Get("Content-Type"))
+		})
+	}
+}
+
 func TestResponder_Error(t *testing.T) {
 	t.Parallel()
 

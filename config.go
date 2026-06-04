@@ -28,7 +28,7 @@ type CLIConfig struct {
 
 func (c *Config) validate() error {
 	if c.BaseURL == "" {
-		c.BaseURL = "http://localhost:8080"
+		c.BaseURL = defaultBaseURL
 	}
 
 	if c.Database == nil {

@@ -12,6 +12,10 @@ const (
 	EnvelopeAlways
 )
 
+const defaultBaseURL = "http://localhost:8080"
+
+const schemaTagJSON = "json"
+
 // StoreType selects the storage backend for features like sessions and rate limiting.
 type StoreType string
 

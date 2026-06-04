@@ -12,21 +12,11 @@ import (
 	"github.com/ragokan/limen"
 )
 
-type authURLBuilderProvider struct {
+type pkceDisabledProvider struct {
 	testProvider
-	lastState       string
-	lastVerifier    string
-	lastRedirectURI string
 }
 
-func (p *authURLBuilderProvider) PKCEEnabled() bool { return false }
-
-func (p *authURLBuilderProvider) BuildAuthorizationURL(_ context.Context, state, codeVerifier, callbackRedirectURI string) (string, error) {
-	p.lastState = state
-	p.lastVerifier = codeVerifier
-	p.lastRedirectURI = callbackRedirectURI
-	return "https://provider.example/authorize?state=" + state, nil
-}
+func (p *pkceDisabledProvider) PKCEEnabled() bool { return false }
 
 type tokenExchangerProvider struct {
 	testProvider
@@ -104,22 +94,24 @@ func TestGetAuthorizationURL(t *testing.T) {
 		assert.Equal(t, http.StatusForbidden, limen.ToLimenError(err).Status())
 	})
 
-	t.Run("custom builder disables PKCE verifier", func(t *testing.T) {
+	t.Run("provider can disable PKCE verifier", func(t *testing.T) {
 		t.Parallel()
 
-		customProvider := &authURLBuilderProvider{
-			testProvider: testProvider{name: "custom-builder"},
+		provider := &pkceDisabledProvider{
+			testProvider: testProvider{name: "pkce-disabled"},
 		}
-		l, plugin := newTestOAuthPlugin(t, WithProviders(customProvider))
+		l, plugin := newTestOAuthPlugin(t, WithProviders(provider))
 		_ = l.Handler()
 
-		authURL, cookieValue, err := plugin.GetAuthorizationURL(context.Background(), "custom-builder", &OAuthAuthorizeURLData{})
+		authURL, cookieValue, err := plugin.GetAuthorizationURL(context.Background(), "pkce-disabled", &OAuthAuthorizeURLData{})
 		require.NoError(t, err)
 		assert.NotEmpty(t, authURL)
 		assert.NotEmpty(t, cookieValue)
-		assert.Equal(t, "", customProvider.lastVerifier)
-		assert.NotEmpty(t, customProvider.lastState)
-		assert.Contains(t, customProvider.lastRedirectURI, "/oauth/custom-builder/callback")
+
+		parsed, parseErr := url.Parse(authURL)
+		require.NoError(t, parseErr)
+		assert.Empty(t, parsed.Query().Get("code_challenge"))
+		assert.Empty(t, parsed.Query().Get("code_challenge_method"))
 	})
 
 	t.Run("form_post provider includes response_mode param", func(t *testing.T) {

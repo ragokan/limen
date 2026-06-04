@@ -12,7 +12,7 @@ import (
 	"github.com/ragokan/limen"
 )
 
-func setupTestGormDB(t *testing.T) *Adapter {
+func setupTestGormDB(t testing.TB) *Adapter {
 	t.Helper()
 
 	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
@@ -161,6 +161,56 @@ func TestGorm_Count(t *testing.T) {
 	count, err := adapter.Count(ctx, "test_items", nil)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(3), count)
+}
+
+func TestGorm_WhereConditions_EmptyInIsSafe(t *testing.T) {
+	adapter := setupTestGormDB(t)
+	ctx := context.Background()
+
+	err := adapter.Create(ctx, "test_items", map[string]any{"name": "Alice"})
+	assert.NoError(t, err)
+
+	results, err := adapter.FindMany(ctx, "test_items", []limen.Where{
+		limen.In("name", []any{}),
+	}, nil)
+	assert.NoError(t, err)
+	assert.Empty(t, results)
+
+	results, err = adapter.FindMany(ctx, "test_items", []limen.Where{
+		limen.NotIn("name", []any{}),
+	}, nil)
+	assert.NoError(t, err)
+	assert.Len(t, results, 1)
+}
+
+func TestGorm_WhereConditions_InvalidConditionReturnsError(t *testing.T) {
+	adapter := setupTestGormDB(t)
+	ctx := context.Background()
+
+	_, err := adapter.FindMany(ctx, "test_items", []limen.Where{
+		{Column: "name", Operator: limen.OpContains, Value: 123},
+	}, nil)
+	assert.ErrorIs(t, err, limen.ErrInvalidCondition)
+}
+
+func TestGorm_WhereConditions_UnsafeColumnReturnsError(t *testing.T) {
+	adapter := setupTestGormDB(t)
+	ctx := context.Background()
+
+	_, err := adapter.FindMany(ctx, "test_items", []limen.Where{
+		limen.Eq("name;DROP TABLE test_items", "Alice"),
+	}, nil)
+	assert.ErrorIs(t, err, limen.ErrInvalidCondition)
+}
+
+func TestGorm_OrderBy_InvalidDirectionReturnsError(t *testing.T) {
+	adapter := setupTestGormDB(t)
+	ctx := context.Background()
+
+	_, err := adapter.FindMany(ctx, "test_items", nil, &limen.QueryOptions{
+		OrderBy: []limen.OrderBy{{Column: "name", Direction: "DROP TABLE"}},
+	})
+	assert.ErrorIs(t, err, limen.ErrInvalidCondition)
 }
 
 func TestGorm_Transaction_Commit(t *testing.T) {

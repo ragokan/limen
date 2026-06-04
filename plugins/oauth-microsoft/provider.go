@@ -173,12 +173,19 @@ func (m *microsoftProvider) OAuth2Config() (*oauth2.Config, []oauth2.AuthCodeOpt
 	return m.oauthConfig, authOpts
 }
 
+func (m *microsoftProvider) IDTokenNonceEnabled() bool {
+	return true
+}
+
 func (m *microsoftProvider) GetUserInfo(ctx context.Context, token *oauth.TokenResponse) (*oauth.ProviderUserInfo, error) {
 	if token.IDToken == "" {
 		return nil, errors.New("microsoft: id_token required; include openid scope")
 	}
 	claims, err := m.config.verifyIDToken(ctx, token.IDToken)
 	if err != nil {
+		return nil, fmt.Errorf("microsoft: %w", err)
+	}
+	if err := oauth.VerifyIDTokenNonce(claims, oauth.IDTokenNonce(ctx)); err != nil {
 		return nil, fmt.Errorf("microsoft: %w", err)
 	}
 

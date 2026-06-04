@@ -3,6 +3,7 @@ package magiclink
 import (
 	"context"
 	"errors"
+	"maps"
 	"net/url"
 	"strings"
 	"time"
@@ -96,7 +97,7 @@ func (p *magicLinkPlugin) validateMagicLinkState(ctx context.Context, verificati
 			return err
 		}
 
-		return p.upsertVerifiedUser(ctx, existingUser, state.Email, state.AdditionalData)
+		return p.upsertVerifiedUser(ctx, existingUser, state.Email, p.mapMetaToUser(state.AdditionalData))
 	}); err != nil {
 		return nil, state, err
 	}
@@ -107,6 +108,13 @@ func (p *magicLinkPlugin) validateMagicLinkState(ctx context.Context, verificati
 	}
 
 	return &limen.AuthenticationResult{User: refreshedUser}, state, nil
+}
+
+func (p *magicLinkPlugin) mapMetaToUser(meta map[string]any) map[string]any {
+	if p.config.mapMetaToUser == nil || len(meta) == 0 {
+		return nil
+	}
+	return maps.Clone(p.config.mapMetaToUser(maps.Clone(meta)))
 }
 
 func (p *magicLinkPlugin) upsertVerifiedUser(ctx context.Context, existingUser *limen.User, email string, additionalData map[string]any) error {

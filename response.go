@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+const sessionResponseUserKey = "user"
+
 type Responder struct {
 	cfg                *responseEnvelopeConfig
 	sessionTransformer SessionTransformer
@@ -66,6 +68,11 @@ func (rs Responder) JSON(w http.ResponseWriter, r *http.Request, status int, pay
 		return nil
 	}
 
+	if !statusAllowsBody(status) {
+		w.WriteHeader(status)
+		return nil
+	}
+
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
 
@@ -89,6 +96,10 @@ func (rs Responder) JSON(w http.ResponseWriter, r *http.Request, status int, pay
 	}
 
 	return json.NewEncoder(w).Encode(out)
+}
+
+func statusAllowsBody(status int) bool {
+	return status >= http.StatusOK && status != http.StatusNoContent && status != http.StatusNotModified
 }
 
 func (rs Responder) Error(w http.ResponseWriter, r *http.Request, err error) error {
@@ -136,7 +147,7 @@ func (rs Responder) SessionResponse(w http.ResponseWriter, r *http.Request, core
 	}
 
 	return rs.JSON(w, r, http.StatusOK, map[string]any{
-		"user": SerializeModel(core.Schema.User, result.User),
+		sessionResponseUserKey: SerializeModel(core.Schema.User, result.User),
 	})
 }
 
