@@ -1,6 +1,7 @@
 package oauth
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -27,14 +28,14 @@ func (h *oauthHandlers) SignInWithOAuth(w http.ResponseWriter, r *http.Request) 
 		RedirectURI:      r.URL.Query().Get("redirect_uri"),
 		ErrorRedirectURI: r.URL.Query().Get("error_redirect_uri"),
 	}
-	url, cookieValue, err := h.plugin.GetAuthorizationURL(r.Context(), providerName, request)
+	authURL, cookieValue, err := h.plugin.GetAuthorizationURL(r.Context(), providerName, request)
 	if err != nil {
 		h.responder.Error(w, r, err)
 		return
 	}
 
 	h.setStateCookie(w, cookieValue)
-	h.responder.JSON(w, r, http.StatusOK, map[string]any{"url": url})
+	h.responder.JSON(w, r, http.StatusOK, map[string]any{"url": authURL})
 }
 
 func (h *oauthHandlers) Callback(w http.ResponseWriter, r *http.Request) {
@@ -44,7 +45,7 @@ func (h *oauthHandlers) Callback(w http.ResponseWriter, r *http.Request) {
 		h.handleCallbackResponse(w, r, nil, nil, nil, err)
 		return
 	}
-	code := callbackParams.Get("code")
+	code := callbackParams.Get(callbackParamCode)
 	state := callbackParams.Get("state")
 	callbackErr := callbackErrorFromQuery(callbackParams)
 
@@ -93,14 +94,14 @@ func (h *oauthHandlers) LinkAccountWithOAuth(w http.ResponseWriter, r *http.Requ
 		ErrorRedirectURI: r.URL.Query().Get("error_redirect_uri"),
 	}
 
-	url, cookieValue, err := h.plugin.GetAuthorizationURL(r.Context(), providerName, request)
+	authURL, cookieValue, err := h.plugin.GetAuthorizationURL(r.Context(), providerName, request)
 	if err != nil {
 		h.responder.Error(w, r, err)
 		return
 	}
 
 	h.setStateCookie(w, cookieValue)
-	h.responder.JSON(w, r, http.StatusOK, map[string]any{"url": url})
+	h.responder.JSON(w, r, http.StatusOK, map[string]any{"url": authURL})
 }
 
 func (h *oauthHandlers) ListAccounts(w http.ResponseWriter, r *http.Request) {
@@ -138,24 +139,14 @@ func (h *oauthHandlers) UnlinkAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *oauthHandlers) GetTokens(w http.ResponseWriter, r *http.Request) {
-	session, err := limen.GetCurrentSessionFromCtx(r)
-	if err != nil {
-		h.responder.Error(w, r, err)
-		return
-	}
-
-	providerName := limen.GetParam(r, "provider")
-
-	tokens, err := h.plugin.GetAccessToken(r.Context(), session.User.ID, providerName)
-	if err != nil {
-		h.responder.Error(w, r, err)
-		return
-	}
-
-	h.responder.JSON(w, r, http.StatusOK, tokens)
+	h.respondWithTokens(w, r, h.plugin.GetAccessToken)
 }
 
 func (h *oauthHandlers) RefreshAccessToken(w http.ResponseWriter, r *http.Request) {
+	h.respondWithTokens(w, r, h.plugin.RefreshAccessToken)
+}
+
+func (h *oauthHandlers) respondWithTokens(w http.ResponseWriter, r *http.Request, getTokens func(context.Context, any, string) (*ActiveTokens, error)) {
 	session, err := limen.GetCurrentSessionFromCtx(r)
 	if err != nil {
 		h.responder.Error(w, r, err)
@@ -164,7 +155,7 @@ func (h *oauthHandlers) RefreshAccessToken(w http.ResponseWriter, r *http.Reques
 
 	providerName := limen.GetParam(r, "provider")
 
-	tokens, err := h.plugin.RefreshAccessToken(r.Context(), session.User.ID, providerName)
+	tokens, err := getTokens(r.Context(), session.User.ID, providerName)
 	if err != nil {
 		h.responder.Error(w, r, err)
 		return
@@ -204,9 +195,9 @@ func (h *oauthHandlers) handleCallbackResponse(w http.ResponseWriter, r *http.Re
 func (h *oauthHandlers) buildErrorRedirectURL(redirectURI string, err error) string {
 	ae := limen.ToLimenError(err)
 	if details, ok := ae.Details().(map[string]string); ok {
-		code := details["code"]
+		code := details[callbackParamCode]
 		if code != "" {
-			return appendOAuthErrorParams(redirectURI, code, details["error_description"])
+			return appendOAuthErrorParams(redirectURI, code, details[callbackParamErrorDescription])
 		}
 	}
 

@@ -1,0 +1,31 @@
+go 1.25.0
+
+use (
+	.
+	./adapters/gorm
+	./adapters/sql
+	./cmd/limen
+	./examples/adapters/gorm
+	./examples/adapters/sql
+	./examples/basic
+	./examples/gin
+	./examples/oauth-google
+	./examples/two-factor
+	./plugins/credential-password
+	./plugins/magic-link
+	./plugins/oauth
+	./plugins/oauth-apple
+	./plugins/oauth-consentkeys
+	./plugins/oauth-discord
+	./plugins/oauth-facebook
+	./plugins/oauth-generic
+	./plugins/oauth-github
+	./plugins/oauth-google
+	./plugins/oauth-linkedin
+	./plugins/oauth-microsoft
+	./plugins/oauth-spotify
+	./plugins/oauth-twitch
+	./plugins/oauth-twitter
+	./plugins/session-jwt
+	./plugins/two-factor
+)

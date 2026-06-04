@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strings"
 )
 
 type bodyContextKey struct{}
+
+var errRequestBodyTooLarge = errors.New("request body too large")
 
 // normalizePath normalizes the base path to start with a slash.
 func normalizePath(basePath string) string {
@@ -45,11 +48,18 @@ func shouldParseBody(req *http.Request) bool {
 
 // parseJSONBody reads and parses the JSON body from the request
 // Returns the parsed body map and the original body bytes for restoration
-func parseJSONBody(req *http.Request) (map[string]any, []byte, error) {
+func parseJSONBody(req *http.Request, maxBodyBytes int64) (map[string]any, []byte, error) {
 	defer req.Body.Close()
-	bodyBytes, err := io.ReadAll(req.Body)
+	reader := req.Body
+	if maxBodyBytes > 0 {
+		reader = io.NopCloser(io.LimitReader(req.Body, maxBodyBytes+1))
+	}
+	bodyBytes, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, nil, err
+	}
+	if maxBodyBytes > 0 && int64(len(bodyBytes)) > maxBodyBytes {
+		return nil, nil, errRequestBodyTooLarge
 	}
 
 	var body map[string]any
@@ -61,26 +71,31 @@ func parseJSONBody(req *http.Request) (map[string]any, []byte, error) {
 }
 
 // parseAndStoreBody parses the JSON body if needed and stores it in context.
-func parseAndStoreBody(req *http.Request) *http.Request {
+func parseAndStoreBody(req *http.Request, maxBodyBytes int64) (*http.Request, error) {
 	if GetJSONBody(req) != nil {
-		return req
+		return req, nil
 	}
 
 	if !shouldParseBody(req) {
-		return req
+		return req, nil
 	}
 
-	body, bodyBytes, err := parseJSONBody(req)
+	if maxBodyBytes > 0 && req.ContentLength > maxBodyBytes {
+		return req, errRequestBodyTooLarge
+	}
+
+	body, bodyBytes, err := parseJSONBody(req, maxBodyBytes)
 	if err != nil {
-		return req
+		return req, err
 	}
 
 	req = req.WithContext(context.WithValue(req.Context(), bodyContextKey{}, body))
+	updateAdditionalFieldsRequest(req)
 
 	// Restore body for handlers that need to read it
 	req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
-	return req
+	return req, nil
 }
 
 func getCurrentRouteFromContext(ctx context.Context) *route {

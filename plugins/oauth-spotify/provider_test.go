@@ -25,6 +25,7 @@ func TestGetUserInfo_EmailIsNotVerified(t *testing.T) {
 				"id": "spotify-user-1",
 				"display_name": "Test User",
 				"email": "user@example.com",
+				"email_verified": true,
 				"images": [{"url": "https://example.com/avatar.png"}]
 			}`)),
 		}, nil
@@ -39,6 +40,38 @@ func TestGetUserInfo_EmailIsNotVerified(t *testing.T) {
 	}
 	if info.EmailVerified {
 		t.Fatalf("spotify email should not be marked verified: %#v", info)
+	}
+}
+
+func TestOAuth2Config_DefaultScopes(t *testing.T) {
+	t.Parallel()
+
+	provider := New(WithScopes()).(*spotifyProvider)
+	cfg, _ := provider.OAuth2Config()
+
+	if len(cfg.Scopes) != 1 || cfg.Scopes[0] != "user-read-email" {
+		t.Fatalf("Scopes = %#v, want user-read-email", cfg.Scopes)
+	}
+}
+
+func TestGetUserInfo_MissingEmailReturnsError(t *testing.T) {
+	t.Parallel()
+
+	provider := New().(*spotifyProvider)
+	provider.httpClient = &http.Client{Transport: roundTripFunc(func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header:     make(http.Header),
+			Body: io.NopCloser(strings.NewReader(`{
+				"id": "spotify-user-1",
+				"display_name": "Test User"
+			}`)),
+		}, nil
+	})}
+
+	_, err := provider.GetUserInfo(context.Background(), &oauth.TokenResponse{AccessToken: "access-token"})
+	if err == nil {
+		t.Fatal("expected missing email error")
 	}
 }
 

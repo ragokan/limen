@@ -1,0 +1,49 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/ragokan/limen
+cpu: Apple M4 Pro
+                                │ benchmarks/results/micro-optimizations-baseline-root.txt │ benchmarks/results/micro-optimizations-after-root.txt │
+                                │                          sec/op                          │            sec/op              vs base                │
+DatabaseFindOneUser-14                                                         5.549µ ± 5%                     5.465µ ± 6%        ~ (p=0.579 n=10)
+DatabaseFindManyUsers-14                                                       15.63µ ± 2%                     15.03µ ± 2%   -3.82% (p=0.000 n=10)
+DatabaseCreateUser-14                                                          676.1n ± 6%                     668.6n ± 1%        ~ (p=0.529 n=10)
+RateLimiterCheckCacheSameKey-14                                                948.8n ± 1%                     955.5n ± 1%        ~ (p=0.325 n=10)
+RateLimiterCheckCacheNewKeys-14                                                632.9n ± 3%                     861.1n ± 9%  +36.06% (p=0.000 n=10)
+RouterStaticRoute-14                                                           300.2n ± 2%                     254.7n ± 4%  -15.16% (p=0.000 n=10)
+RouterParamRoute-14                                                            434.6n ± 2%                     391.5n ± 1%   -9.91% (p=0.000 n=10)
+RouterWithMiddleware-14                                                        481.7n ± 2%                     398.4n ± 5%  -17.29% (p=0.000 n=10)
+ValidatorEmail-14                                                             2382.5n ± 2%                     204.7n ± 1%  -91.41% (p=0.000 n=10)
+ValidateJSONBodyLookup-14                                                      9.479n ± 2%                     9.424n ± 1%        ~ (p=0.912 n=10)
+geomean                                                                        741.1n                          567.5n       -23.43%
+
+                                │ benchmarks/results/micro-optimizations-baseline-root.txt │ benchmarks/results/micro-optimizations-after-root.txt │
+                                │                           B/op                           │            B/op              vs base                  │
+DatabaseFindOneUser-14                                                      9.055Ki ± 0%                    9.055Ki ± 0%        ~ (p=1.000 n=10) ¹
+DatabaseFindManyUsers-14                                                    42.56Ki ± 0%                    42.56Ki ± 0%        ~ (p=1.000 n=10) ¹
+DatabaseCreateUser-14                                                       1.206Ki ± 1%                    1.207Ki ± 0%        ~ (p=0.051 n=10)
+RateLimiterCheckCacheSameKey-14                                               685.0 ± 0%                      701.0 ± 0%   +2.34% (p=0.000 n=10)
+RateLimiterCheckCacheNewKeys-14                                               454.5 ± 3%                      530.5 ± 4%  +16.72% (p=0.000 n=10)
+RouterStaticRoute-14                                                          976.0 ± 0%                      880.0 ± 0%   -9.84% (p=0.000 n=10)
+RouterParamRoute-14                                                         1.609Ki ± 0%                    1.562Ki ± 0%   -2.91% (p=0.000 n=10)
+RouterWithMiddleware-14                                                     1.672Ki ± 0%                    1.562Ki ± 0%   -6.54% (p=0.000 n=10)
+ValidatorEmail-14                                                           5898.00 ± 0%                      24.00 ± 0%  -99.59% (p=0.000 n=10)
+ValidateJSONBodyLookup-14                                                     0.000 ± 0%                      0.000 ± 0%        ~ (p=1.000 n=10) ¹
+geomean                                                                                  ²                                -42.46%                ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean
+
+                                │ benchmarks/results/micro-optimizations-baseline-root.txt │ benchmarks/results/micro-optimizations-after-root.txt │
+                                │                        allocs/op                         │          allocs/op           vs base                  │
+DatabaseFindOneUser-14                                                        205.0 ± 0%                      205.0 ± 0%        ~ (p=1.000 n=10) ¹
+DatabaseFindManyUsers-14                                                      303.0 ± 0%                      303.0 ± 0%        ~ (p=1.000 n=10) ¹
+DatabaseCreateUser-14                                                         12.00 ± 0%                      12.00 ± 0%        ~ (p=1.000 n=10) ¹
+RateLimiterCheckCacheSameKey-14                                               16.00 ± 0%                      17.00 ± 0%   +6.25% (p=0.000 n=10)
+RateLimiterCheckCacheNewKeys-14                                               11.00 ± 0%                      13.00 ± 0%  +18.18% (p=0.000 n=10)
+RouterStaticRoute-14                                                         12.000 ± 0%                      9.000 ± 0%  -25.00% (p=0.000 n=10)
+RouterParamRoute-14                                                           15.00 ± 0%                      13.00 ± 0%  -13.33% (p=0.000 n=10)
+RouterWithMiddleware-14                                                       18.00 ± 0%                      13.00 ± 0%  -27.78% (p=0.000 n=10)
+ValidatorEmail-14                                                            67.000 ± 0%                      1.000 ± 0%  -98.51% (p=0.000 n=10)
+ValidateJSONBodyLookup-14                                                     0.000 ± 0%                      0.000 ± 0%        ~ (p=1.000 n=10) ¹
+geomean                                                                                  ²                                -37.71%                ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean

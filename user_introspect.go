@@ -28,7 +28,7 @@ func (u *UserSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefinition 
 			IsNullable:   false,
 			IsPrimaryKey: true,
 			Tags: map[string]string{
-				"json": "id",
+				schemaTagJSON: string(SchemaIDField),
 			},
 		},
 		{
@@ -38,7 +38,7 @@ func (u *UserSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefinition 
 			IsNullable:   false,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "email",
+				schemaTagJSON: string(UserSchemaEmailField),
 			},
 		},
 		{
@@ -48,7 +48,7 @@ func (u *UserSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefinition 
 			IsNullable:   true,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "-",
+				schemaTagJSON: "-",
 			},
 		},
 		{
@@ -58,7 +58,7 @@ func (u *UserSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefinition 
 			IsNullable:   true,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "email_verified_at",
+				schemaTagJSON: "email_verified_at",
 			},
 		},
 	}
@@ -72,7 +72,7 @@ func (u *UserSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefinition 
 				IsNullable:   true,
 				IsPrimaryKey: false,
 				Tags: map[string]string{
-					"json": "first_name",
+					schemaTagJSON: string(UserSchemaFirstNameField),
 				},
 			},
 			ColumnDefinition{
@@ -82,7 +82,7 @@ func (u *UserSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefinition 
 				IsNullable:   true,
 				IsPrimaryKey: false,
 				Tags: map[string]string{
-					"json": "last_name",
+					schemaTagJSON: "last_name",
 				},
 			},
 		)

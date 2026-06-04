@@ -14,6 +14,7 @@ type Config struct {
 	Plugins        []Plugin
 	Schema         *SchemaConfig
 	Session        *sessionConfig
+	Cleanup        *cleanupConfig
 	HTTP           *httpConfig
 	CLI            *CLIConfig
 	Email          *emailConfig
@@ -28,7 +29,7 @@ type CLIConfig struct {
 
 func (c *Config) validate() error {
 	if c.BaseURL == "" {
-		c.BaseURL = "http://localhost:8080"
+		c.BaseURL = defaultBaseURL
 	}
 
 	if c.Database == nil {
@@ -66,6 +67,10 @@ func (c *Config) validate() error {
 
 	if err := c.Session.validate(); err != nil {
 		return err
+	}
+
+	if c.Cleanup == nil {
+		c.Cleanup = NewDefaultCleanupConfig()
 	}
 
 	if c.HTTP == nil {

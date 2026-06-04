@@ -59,6 +59,32 @@ func TestHashPassword_WrongPassword(t *testing.T) {
 	assert.False(t, valid)
 }
 
+func TestVerifyPassword_UsesStoredPHCParameters(t *testing.T) {
+	t.Parallel()
+
+	original := newPasswordHasher(passwordHasherConfig{
+		time:      1,
+		memoryKiB: 8 * 1024,
+		Parallel:  1,
+		saltLen:   16,
+		keyLen:    32,
+	})
+	changed := newPasswordHasher(passwordHasherConfig{
+		time:      2,
+		memoryKiB: 16 * 1024,
+		Parallel:  2,
+		saltLen:   16,
+		keyLen:    32,
+	})
+
+	hash, err := original.hashPassword([]byte("Password1"))
+	assert.NoError(t, err)
+
+	valid, err := changed.verifyPassword([]byte("Password1"), hash)
+	assert.NoError(t, err)
+	assert.True(t, valid)
+}
+
 func TestHashPassword_PHCFormat(t *testing.T) {
 	t.Parallel()
 

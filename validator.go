@@ -8,6 +8,11 @@ import (
 	"strings"
 )
 
+var (
+	emailPattern = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+	urlPattern   = regexp.MustCompile(`^https?://[^\s/$.?#].\S*$`)
+)
+
 type ValidationError struct {
 	Field              string
 	Message            string
@@ -111,9 +116,8 @@ func (v *Validator) Email(field string, value any) *Validator {
 	if value == nil || value == "" {
 		return v
 	}
-	emailRegex := `^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`
-	matched, err := regexp.MatchString(emailRegex, value.(string))
-	if err != nil || !matched {
+	valueString, ok := value.(string)
+	if !ok || !emailPattern.MatchString(valueString) {
 		v.errors.Add(field, "must be a valid email address", true)
 	}
 	return v
@@ -131,9 +135,7 @@ func (v *Validator) URL(field, value string) *Validator {
 	if value == "" {
 		return v // Empty URLs are handled by RequiredString()
 	}
-	urlRegex := `^https?://[^\s/$.?#].[^\s]*$`
-	matched, err := regexp.MatchString(urlRegex, value)
-	if err != nil || !matched {
+	if !urlPattern.MatchString(value) {
 		v.errors.Add(field, "must be a valid URL", true)
 	}
 	return v

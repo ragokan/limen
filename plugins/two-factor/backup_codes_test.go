@@ -93,6 +93,20 @@ func TestBackupCodes_CheckAndExpireBackupCode(t *testing.T) {
 	assert.NotContains(t, remaining, "ghi-jkl")
 }
 
+func TestBackupCodes_CheckAndExpireLastBackupCode(t *testing.T) {
+	t.Parallel()
+
+	bc := newTestBackupCodes(t)
+
+	encrypted, valid := bc.checkAndExpireBackupCode([]string{"abc-def"}, "abc-def")
+	assert.True(t, valid)
+	assert.NotEmpty(t, encrypted)
+
+	remaining, err := bc.decryptBackupCodes(encrypted)
+	assert.NoError(t, err)
+	assert.Empty(t, remaining)
+}
+
 func TestBackupCodes_CheckAndExpire_InvalidCode(t *testing.T) {
 	t.Parallel()
 

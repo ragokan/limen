@@ -12,14 +12,17 @@ const (
 	EnvelopeAlways
 )
 
+const defaultBaseURL = "http://localhost:8080"
+
+const schemaTagJSON = "json"
+
 // StoreType selects the storage backend for features like sessions and rate limiting.
 type StoreType string
 
 const (
 	// StoreTypeDatabase stores data in the primary database via the DatabaseAdapter.
 	StoreTypeDatabase StoreType = "database"
-	// StoreTypeCache stores data in the shared CacheAdapter (defaults to in-memory;
-	// swap with a Redis adapter for multi-instance deployments).
+	// StoreTypeCache stores data in the shared CacheAdapter.
 	StoreTypeCache StoreType = "cache_store"
 )
 

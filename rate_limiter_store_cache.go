@@ -20,7 +20,7 @@ func newRateLimiterCacheStore(core *LimenCore) *cacheRateLimiterStore {
 }
 
 func (s *cacheRateLimiterStore) rateLimitKey(key string) string {
-	return fmt.Sprintf("%s:rl:%s", s.prefix, key)
+	return s.prefix + ":rl:" + key
 }
 
 func (s *cacheRateLimiterStore) Get(ctx context.Context, key string) (*RateLimit, error) {

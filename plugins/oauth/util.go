@@ -138,8 +138,8 @@ func RefreshToken(ctx context.Context, config *oauth2.Config, refreshToken strin
 
 // FetchUserInfoJSON performs a GET request to the given URL with a Bearer token
 // and decodes the JSON response into a map. Shared by REST-based OAuth providers.
-func FetchUserInfoJSON(ctx context.Context, client *http.Client, providerName, url, accessToken string, extraHeaders map[string]string) (map[string]any, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+func FetchUserInfoJSON(ctx context.Context, client *http.Client, providerName, endpointURL, accessToken string, extraHeaders map[string]string) (map[string]any, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpointURL, http.NoBody)
 	if err != nil {
 		return nil, err
 	}

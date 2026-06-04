@@ -31,11 +31,13 @@ func TestGetUserInfo_UsesIDTokenVerifier(t *testing.T) {
 				"email":          "user@example.com",
 				"email_verified": "true",
 				"name":           "Test User",
+				"nonce":          "nonce",
 			}, nil
 		}),
 	)
 
-	info, err := provider.GetUserInfo(context.Background(), &oauth.TokenResponse{IDToken: "id-token"})
+	ctx := oauth.ContextWithIDTokenNonce(context.Background(), "nonce")
+	info, err := provider.GetUserInfo(ctx, &oauth.TokenResponse{IDToken: "id-token"})
 	if err != nil {
 		t.Fatalf("GetUserInfo: %v", err)
 	}
@@ -57,15 +59,38 @@ func TestGetUserInfo_MapsBooleanEmailVerifiedClaim(t *testing.T) {
 				"sub":            "linkedin-user-1",
 				"email":          "user@example.com",
 				"email_verified": true,
+				"nonce":          "nonce",
 			}, nil
 		}),
 	)
 
-	info, err := provider.GetUserInfo(context.Background(), &oauth.TokenResponse{IDToken: "id-token"})
+	ctx := oauth.ContextWithIDTokenNonce(context.Background(), "nonce")
+	info, err := provider.GetUserInfo(ctx, &oauth.TokenResponse{IDToken: "id-token"})
 	if err != nil {
 		t.Fatalf("GetUserInfo: %v", err)
 	}
 	if !info.EmailVerified {
 		t.Fatalf("expected verified email: %#v", info)
+	}
+}
+
+func TestGetUserInfo_RejectsNonceMismatch(t *testing.T) {
+	t.Parallel()
+
+	provider := New(
+		WithClientID("client-id"),
+		WithIDTokenVerifier(func(_ context.Context, _ string) (map[string]any, error) {
+			return map[string]any{
+				"sub":   "linkedin-user-1",
+				"email": "user@example.com",
+				"nonce": "other",
+			}, nil
+		}),
+	)
+
+	ctx := oauth.ContextWithIDTokenNonce(context.Background(), "nonce")
+	_, err := provider.GetUserInfo(ctx, &oauth.TokenResponse{IDToken: "id-token"})
+	if err == nil {
+		t.Fatal("expected nonce mismatch")
 	}
 }

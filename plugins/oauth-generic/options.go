@@ -12,23 +12,22 @@ type ConfigOption func(*config)
 const defaultEmailScope = "email"
 
 type config struct {
-	name                  string
-	clientID              string
-	clientSecret          string
-	authorizationURL      string
-	tokenURL              string
-	userInfoURL           string
-	issuer                string
-	discoveryURL          string
-	scopes                []string
-	redirectURL           string
-	options               map[string]string
-	mapUserInfo           func(raw map[string]any) (*oauth.ProviderUserInfo, error)
-	getUserInfo           func(ctx context.Context, token *oauth.TokenResponse) (*oauth.ProviderUserInfo, error)
-	buildAuthorizationURL func(ctx context.Context, state, codeVerifier, callbackRedirectURI string) (string, error)
-	exchangeTokens        func(ctx context.Context, code, codeVerifier, redirectURI string) (*oauth.TokenResponse, error)
-	refreshTokens         func(ctx context.Context, refreshToken string) (*oauth.TokenResponse, error)
-	verifyIDToken         oauth.IDTokenVerifier
+	name             string
+	clientID         string
+	clientSecret     string
+	authorizationURL string
+	tokenURL         string
+	userInfoURL      string
+	issuer           string
+	discoveryURL     string
+	scopes           []string
+	redirectURL      string
+	options          map[string]string
+	mapUserInfo      func(raw map[string]any) (*oauth.ProviderUserInfo, error)
+	getUserInfo      func(ctx context.Context, token *oauth.TokenResponse) (*oauth.ProviderUserInfo, error)
+	exchangeTokens   func(ctx context.Context, code, codeVerifier, redirectURI string) (*oauth.TokenResponse, error)
+	refreshTokens    func(ctx context.Context, refreshToken string) (*oauth.TokenResponse, error)
+	verifyIDToken    oauth.IDTokenVerifier
 }
 
 func (c *config) resolveDiscovery() {
@@ -67,8 +66,8 @@ func (c *config) validate() {
 			panic("oauth-generic: " + field + " is required (use " + r.hint + ")")
 		}
 	}
-	if c.authorizationURL == "" && c.buildAuthorizationURL == nil {
-		panic("oauth-generic: authorization URL is required (use WithAuthorizationURL or WithBuildAuthorizationURL)")
+	if c.authorizationURL == "" {
+		panic("oauth-generic: authorization URL is required (use WithAuthorizationURL)")
 	}
 	if c.tokenURL == "" && c.exchangeTokens == nil {
 		panic("oauth-generic: token URL is required (use WithTokenURL or WithExchangeTokens)")
@@ -181,14 +180,6 @@ func WithMapUserInfo(fn func(raw map[string]any) (*oauth.ProviderUserInfo, error
 func WithGetUserInfo(fn func(ctx context.Context, token *oauth.TokenResponse) (*oauth.ProviderUserInfo, error)) ConfigOption {
 	return func(c *config) {
 		c.getUserInfo = fn
-	}
-}
-
-// WithBuildAuthorizationURL sets a custom function to build the authorization URL.
-// When set, the base OAuth module will call this instead of BuildAuthCodeURL.
-func WithBuildAuthorizationURL(fn func(ctx context.Context, state, codeVerifier, callbackRedirectURI string) (string, error)) ConfigOption {
-	return func(c *config) {
-		c.buildAuthorizationURL = fn
 	}
 }
 

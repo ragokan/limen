@@ -12,25 +12,26 @@ type AdditionalFieldsFunc func(ctx *AdditionalFieldsContext) (map[string]any, er
 type AdditionalFieldsContext struct {
 	request  *http.Request
 	response http.ResponseWriter
-	body     map[string]any
 }
 
 func newAdditionalFieldsContext(request *http.Request, response http.ResponseWriter) *AdditionalFieldsContext {
 	ctx := &AdditionalFieldsContext{
 		request:  request,
 		response: response,
-		body:     GetJSONBody(request),
 	}
 
 	return ctx
 }
 
 func (ctx *AdditionalFieldsContext) GetBody() map[string]any {
-	return ctx.body
+	if ctx == nil {
+		return nil
+	}
+	return GetJSONBody(ctx.request)
 }
 
 func (ctx *AdditionalFieldsContext) GetBodyValue(key string) any {
-	return ctx.body[key]
+	return ctx.GetBody()[key]
 }
 
 func (ctx *AdditionalFieldsContext) GetHeader(key string) string {
@@ -42,11 +43,21 @@ func (ctx *AdditionalFieldsContext) GetHeaders() http.Header {
 }
 
 func (ctx *AdditionalFieldsContext) IsEmpty(key string) bool {
-	return ctx.body[key] == nil || ctx.body[key] == ""
+	value := ctx.GetBodyValue(key)
+	return value == nil || value == ""
 }
 
 func withAdditionalFieldsContext(ctx context.Context, r *http.Request, w http.ResponseWriter) context.Context {
 	return context.WithValue(ctx, contextKeyAdditionalFields{}, newAdditionalFieldsContext(r, w))
+}
+
+func updateAdditionalFieldsRequest(r *http.Request) {
+	if r == nil {
+		return
+	}
+	if afCtx, ok := r.Context().Value(contextKeyAdditionalFields{}).(*AdditionalFieldsContext); ok {
+		afCtx.request = r
+	}
 }
 
 // getAdditionalFieldsContext retrieves the AdditionalFieldsContext from the req context.

@@ -10,8 +10,6 @@ import (
 // a shared cache backend.
 //
 // The default implementation is MemoryCacheStore (in-process maps).
-// For multi-instance deployments, plug in a Redis-backed implementation
-// via Config.CacheStore.
 type CacheAdapter interface {
 	// Get retrieves the value associated with key.
 	// Returns ErrRecordNotFound if the key does not exist or has expired.

@@ -2,6 +2,7 @@ package twofactor
 
 import (
 	"context"
+	"encoding/json"
 	"slices"
 	"strings"
 
@@ -40,11 +41,24 @@ func (b *backupCodes) decryptBackupCodes(backupCodes string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	if decryptedBackupCodes == "" {
+		return nil, nil
+	}
+	if strings.HasPrefix(decryptedBackupCodes, "[") {
+		var codes []string
+		if err := json.Unmarshal([]byte(decryptedBackupCodes), &codes); err == nil {
+			return codes, nil
+		}
+	}
 	return strings.Split(decryptedBackupCodes, ","), nil
 }
 
 func (b *backupCodes) encryptBackupCodes(backupCodes []string) (string, error) {
-	return b.plugin.encrypt(strings.Join(backupCodes, ","))
+	raw, err := json.Marshal(backupCodes)
+	if err != nil {
+		return "", err
+	}
+	return b.plugin.encrypt(string(raw))
 }
 
 func (b *backupCodes) UpdateBackupCodes(ctx context.Context, userID any) ([]string, error) {

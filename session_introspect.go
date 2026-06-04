@@ -42,7 +42,7 @@ func (s *SessionSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefiniti
 			IsNullable:   false,
 			IsPrimaryKey: true,
 			Tags: map[string]string{
-				"json": "id",
+				schemaTagJSON: string(SchemaIDField),
 			},
 		},
 		{
@@ -52,7 +52,7 @@ func (s *SessionSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefiniti
 			IsNullable:   false,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "token",
+				schemaTagJSON: "token",
 			},
 		},
 		{
@@ -62,7 +62,7 @@ func (s *SessionSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefiniti
 			IsNullable:   false,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "user_id",
+				schemaTagJSON: string(SessionSchemaUserIDField),
 			},
 		},
 		{
@@ -73,7 +73,7 @@ func (s *SessionSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefiniti
 			IsPrimaryKey: false,
 			DefaultValue: string(DatabaseDefaultValueNow),
 			Tags: map[string]string{
-				"json": "created_at",
+				schemaTagJSON: string(SessionSchemaCreatedAtField),
 			},
 		},
 		{
@@ -83,7 +83,7 @@ func (s *SessionSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefiniti
 			IsNullable:   false,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "expires_at",
+				schemaTagJSON: "expires_at",
 			},
 		},
 		{
@@ -93,7 +93,7 @@ func (s *SessionSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefiniti
 			IsNullable:   false,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "last_access",
+				schemaTagJSON: "last_access",
 			},
 		},
 		{
@@ -103,7 +103,7 @@ func (s *SessionSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefiniti
 			IsNullable:   true,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": "metadata",
+				schemaTagJSON: "metadata",
 			},
 		},
 	}

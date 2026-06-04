@@ -197,6 +197,7 @@ func (h *DatabaseActionHelper) ListSessionsByUserID(ctx context.Context, userID 
 	sessionSchema := h.core.Schema.Session
 	models, err := h.core.FindMany(ctx, sessionSchema, []Where{
 		Eq(sessionSchema.GetUserIDField(), userID),
+		Gt(sessionSchema.GetExpiresAtField(), time.Now()),
 	})
 	if err != nil {
 		return nil, err

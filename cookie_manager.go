@@ -22,6 +22,7 @@ func newCookieManager(base *cookieConfig, secret []byte) *cookieManager {
 // the central cookie configuration. The caller supplies only what varies
 // per use-case: name, value, and maxAge (in seconds; use -1 to delete).
 func (cm *cookieManager) NewCookie(name, value string, maxAge int) *http.Cookie {
+	// #nosec G124 -- cookie security attributes are inherited from cookieConfig below.
 	cookie := &http.Cookie{
 		Name:        name,
 		Value:       value,
@@ -84,6 +85,7 @@ func (cm *cookieManager) Get(r *http.Request, name string) (string, error) {
 
 // SetSignedCookie sets a signed cookie
 func (cm *cookieManager) SetSignedCookie(w http.ResponseWriter, name, value string, maxAge int) error {
+	// #nosec G124 -- NewCookie applies configured Secure, HttpOnly, SameSite, Path, and Partitioned attributes.
 	cookie := cm.NewCookie(name, value, maxAge)
 	if cm.secret == nil {
 		return fmt.Errorf("secret is nil")

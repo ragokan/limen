@@ -214,7 +214,7 @@ func addTimestampFields(fields []ColumnDefinition) []ColumnDefinition {
 		IsPrimaryKey: false,
 		DefaultValue: string(DatabaseDefaultValueNow),
 		Tags: map[string]string{
-			"json": "created_at",
+			schemaTagJSON: string(SchemaCreatedAtField),
 		},
 	}, ColumnDefinition{
 		Name:         string(SchemaUpdatedAtField),
@@ -223,7 +223,7 @@ func addTimestampFields(fields []ColumnDefinition) []ColumnDefinition {
 		IsNullable:   false,
 		IsPrimaryKey: false,
 		Tags: map[string]string{
-			"json": "updated_at",
+			schemaTagJSON: "updated_at",
 		},
 	})
 }
@@ -238,7 +238,7 @@ func addSoftDeleteField(fields []ColumnDefinition, config *SchemaConfig, schemaN
 			IsNullable:   true,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				"json": softDeleteField,
+				schemaTagJSON: softDeleteField,
 			},
 		})
 	}

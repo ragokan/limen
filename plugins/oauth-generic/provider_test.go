@@ -30,6 +30,7 @@ func TestGetUserInfo_MapsVerifiedIDTokenClaims(t *testing.T) {
 				"sub":            "generic-user-1",
 				"email":          "user@example.com",
 				"email_verified": true,
+				"nonce":          "nonce",
 			}, nil
 		}),
 		WithMapUserInfo(func(raw map[string]any) (*oauth.ProviderUserInfo, error) {
@@ -44,7 +45,8 @@ func TestGetUserInfo_MapsVerifiedIDTokenClaims(t *testing.T) {
 		}),
 	)
 
-	info, err := provider.GetUserInfo(context.Background(), &oauth.TokenResponse{IDToken: "id-token"})
+	ctx := oauth.ContextWithIDTokenNonce(context.Background(), "nonce")
+	info, err := provider.GetUserInfo(ctx, &oauth.TokenResponse{IDToken: "id-token"})
 	if err != nil {
 		t.Fatalf("GetUserInfo: %v", err)
 	}
@@ -86,7 +88,8 @@ func TestGetUserInfo_RejectsMismatchedUserInfoSubject(t *testing.T) {
 				t.Fatalf("unexpected id token: %s", idToken)
 			}
 			return map[string]any{
-				"sub": "id-token-user",
+				"sub":   "id-token-user",
+				"nonce": "nonce",
 			}, nil
 		}),
 		WithMapUserInfo(func(raw map[string]any) (*oauth.ProviderUserInfo, error) {
@@ -101,11 +104,43 @@ func TestGetUserInfo_RejectsMismatchedUserInfoSubject(t *testing.T) {
 		}),
 	)
 
-	_, err := provider.GetUserInfo(context.Background(), &oauth.TokenResponse{
+	ctx := oauth.ContextWithIDTokenNonce(context.Background(), "nonce")
+	_, err := provider.GetUserInfo(ctx, &oauth.TokenResponse{
 		AccessToken: "access-token",
 		IDToken:     "id-token",
 	})
 	if err == nil {
 		t.Fatal("expected mismatched subject to be rejected")
+	}
+}
+
+func TestGetUserInfo_RejectsIDTokenNonceMismatch(t *testing.T) {
+	t.Parallel()
+
+	provider := New(
+		WithName("generic"),
+		WithClientID("client-id"),
+		WithClientSecret("client-secret"),
+		WithAuthorizationURL("https://provider.example.com/oauth/authorize"),
+		WithTokenURL("https://provider.example.com/oauth/token"),
+		WithIssuer("https://provider.example.com"),
+		WithIDTokenVerifier(func(_ context.Context, _ string) (map[string]any, error) {
+			return map[string]any{
+				"sub":   "generic-user-1",
+				"email": "user@example.com",
+				"nonce": "other",
+			}, nil
+		}),
+		WithMapUserInfo(func(raw map[string]any) (*oauth.ProviderUserInfo, error) {
+			id, _ := raw["sub"].(string)
+			email, _ := raw["email"].(string)
+			return &oauth.ProviderUserInfo{ID: id, Email: email}, nil
+		}),
+	)
+
+	ctx := oauth.ContextWithIDTokenNonce(context.Background(), "nonce")
+	_, err := provider.GetUserInfo(ctx, &oauth.TokenResponse{IDToken: "id-token"})
+	if err == nil {
+		t.Fatal("expected nonce mismatch")
 	}
 }

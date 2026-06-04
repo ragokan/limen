@@ -36,6 +36,7 @@ func newTestLimenWithSessionConfig(t *testing.T, opts ...SessionConfigOption) *L
 		Database: newTestMemoryAdapter(t),
 		Secret:   testSecret,
 		Session:  NewDefaultSessionConfig(opts...),
+		Cleanup:  NewDefaultCleanupConfig(WithCleanupOnInit(false)),
 	})
 	require.NoError(t, err)
 	return l

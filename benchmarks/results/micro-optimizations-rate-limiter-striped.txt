@@ -1,0 +1,26 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/ragokan/limen
+cpu: Apple M4 Pro
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1347811	       846.3 ns/op	     620 B/op	      12 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1466548	       818.1 ns/op	     621 B/op	      12 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1466688	       816.9 ns/op	     621 B/op	      12 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1469097	       818.8 ns/op	     621 B/op	      12 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1470028	       816.7 ns/op	     621 B/op	      12 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1471273	       820.4 ns/op	     621 B/op	      12 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1449124	       835.3 ns/op	     621 B/op	      12 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1347621	       879.2 ns/op	     620 B/op	      12 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1445067	       855.6 ns/op	     621 B/op	      12 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-14    	 1353790	       887.3 ns/op	     620 B/op	      12 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 2067504	       574.4 ns/op	     388 B/op	       7 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 2384686	       519.2 ns/op	     373 B/op	       7 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 2472340	       487.4 ns/op	     370 B/op	       7 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 2500825	       494.2 ns/op	     369 B/op	       7 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 2665281	       477.0 ns/op	     363 B/op	       7 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 2312684	       513.9 ns/op	     376 B/op	       7 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 2516452	       489.3 ns/op	     368 B/op	       7 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 2573935	       489.5 ns/op	     366 B/op	       7 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 2609774	       493.1 ns/op	     365 B/op	       7 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-14    	 2321565	       530.5 ns/op	     376 B/op	       7 allocs/op
+PASS
+ok  	github.com/ragokan/limen	24.759s

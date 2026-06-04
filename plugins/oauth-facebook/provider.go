@@ -19,6 +19,8 @@ var facebookEndpoint = oauth2.Endpoint{
 	TokenURL: "https://graph.facebook.com/v25.0/oauth/access_token",
 }
 
+const facebookUserInfoURL = "https://graph.facebook.com/v25.0/me?fields=id,name,email,picture.type(large)"
+
 // New creates a Facebook OAuth provider that implements oauth.Provider.
 func New(opts ...ConfigOption) oauth.Provider {
 	cfg := &config{
@@ -66,7 +68,7 @@ func (f *facebookProvider) OAuth2Config() (*oauth2.Config, []oauth2.AuthCodeOpti
 }
 
 func (f *facebookProvider) GetUserInfo(ctx context.Context, token *oauth.TokenResponse) (*oauth.ProviderUserInfo, error) {
-	raw, err := oauth.FetchUserInfoJSON(ctx, f.httpClient, "facebook", "https://graph.facebook.com/me?fields=id,name,email,picture.type(large)", token.AccessToken, nil)
+	raw, err := oauth.FetchUserInfoJSON(ctx, f.httpClient, "facebook", facebookUserInfoURL, token.AccessToken, nil)
 	if err != nil {
 		return nil, err
 	}

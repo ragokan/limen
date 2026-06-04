@@ -128,7 +128,7 @@ func TestRefreshAccessToken(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, tokens)
 		assert.Equal(t, "fresh-access-token", tokens.AccessToken)
-		assert.Equal(t, "old-refresh-token", tokens.RefreshToken)
+		assert.Empty(t, tokens.RefreshToken)
 		assert.Equal(t, "old-scope", tokens.Scope)
 		assert.Equal(t, "old-refresh-token", refresher.lastRefreshToken)
 

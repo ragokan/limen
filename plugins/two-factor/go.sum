@@ -11,10 +11,6 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pquerna/otp v1.4.0 h1:wZvl1TIVxKRThZIBiwOOHOGP/1+nZyWBil9Y2XNEDzg=
 github.com/pquerna/otp v1.4.0/go.mod h1:dkJfzwRKNiegxyNb54X/3fLwhCynbMspSyWKnvi1AEg=
-github.com/ragokan/limen v0.1.2 h1:SHuMbER2Vfj+y+IjJ6y/kvdLb9MCTal/FToKkXTyxu4=
-github.com/ragokan/limen v0.1.2/go.mod h1:Memp0R40lOOlda8ZkzDtf3hIWTnZhjwh5r00yxyo2BA=
-github.com/ragokan/limen/plugins/credential-password v0.1.2 h1:phPdGnsbTu7XpZdSOoiP8jpq24LdF7koyViZKytQtxU=
-github.com/ragokan/limen/plugins/credential-password v0.1.2/go.mod h1:Ey16akM4BDBTb2GUFNNQH2IUmsx7jadnacQa5SuQzRY=
 github.com/rogpeppe/go-internal v1.10.0 h1:TMyTOH3F/DB16zRVcYyreMH6GnZZrwQVAoYjRBZyWFQ=
 github.com/rogpeppe/go-internal v1.10.0/go.mod h1:UQnix2H7Ngw/k4C5ijL5+65zddjncjaFoBhdsK/akog=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

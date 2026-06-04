@@ -3,10 +3,10 @@ module example/oauth-google
 go 1.25.0
 
 require (
-	github.com/ragokan/limen v0.1.2
-	github.com/ragokan/limen/adapters/gorm v0.1.2
-	github.com/ragokan/limen/plugins/oauth v0.1.2
-	github.com/ragokan/limen/plugins/oauth-google v0.1.2
+	github.com/ragokan/limen v0.1.4
+	github.com/ragokan/limen/adapters/gorm v0.1.4
+	github.com/ragokan/limen/plugins/oauth v0.1.4
+	github.com/ragokan/limen/plugins/oauth-google v0.1.4
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.30.1
 )
@@ -16,7 +16,7 @@ require (
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.6.0 // indirect
+	github.com/jackc/pgx/v5 v5.10.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect

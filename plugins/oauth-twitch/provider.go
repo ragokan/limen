@@ -13,8 +13,9 @@ import (
 )
 
 var twitchEndpoint = oauth2.Endpoint{
-	AuthURL:  "https://id.twitch.tv/oauth2/authorize",
-	TokenURL: "https://id.twitch.tv/oauth2/token",
+	AuthURL:   "https://id.twitch.tv/oauth2/authorize",
+	TokenURL:  "https://id.twitch.tv/oauth2/token",
+	AuthStyle: oauth2.AuthStyleInParams,
 }
 
 const claimsParam = `{"id_token":{"email":null,"email_verified":null,"picture":null,"preferred_username":null}}`
@@ -65,12 +66,19 @@ func (t *twitchProvider) OAuth2Config() (*oauth2.Config, []oauth2.AuthCodeOption
 	return t.oauthConfig, authOpts
 }
 
+func (t *twitchProvider) IDTokenNonceEnabled() bool {
+	return true
+}
+
 func (t *twitchProvider) GetUserInfo(ctx context.Context, token *oauth.TokenResponse) (*oauth.ProviderUserInfo, error) {
 	if token.IDToken == "" {
 		return nil, errors.New("twitch: id_token required; include openid scope")
 	}
 	claims, err := t.config.verifyIDToken(ctx, token.IDToken)
 	if err != nil {
+		return nil, fmt.Errorf("twitch: %w", err)
+	}
+	if err := oauth.VerifyIDTokenNonce(claims, oauth.IDTokenNonce(ctx)); err != nil {
 		return nil, fmt.Errorf("twitch: %w", err)
 	}
 

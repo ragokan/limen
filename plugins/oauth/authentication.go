@@ -24,8 +24,8 @@ func (o *oauthPlugin) getProviderConfig(provider Provider) (*oauth2.Config, []oa
 
 	config, authOpts := provider.OAuth2Config()
 	config.RedirectURL = o.constructProviderRedirectURL(provider, config)
-	opts := append(defaultOpts, authOpts...)
-	return config, opts
+	defaultOpts = append(defaultOpts, authOpts...)
+	return config, defaultOpts
 }
 
 func (o *oauthPlugin) constructProviderRedirectURL(provider Provider, config *oauth2.Config) string {
@@ -35,7 +35,7 @@ func (o *oauthPlugin) constructProviderRedirectURL(provider Provider, config *oa
 	return o.core.GetBaseURLWithPluginPath(limen.PluginOAuth, fmt.Sprintf("%s/callback", provider.Name()))
 }
 
-func (o *oauthPlugin) buildAuthorizationURL(ctx context.Context, provider Provider, stateToken, verifier, nonce string) (string, error) {
+func (o *oauthPlugin) buildAuthorizationURL(provider Provider, stateToken, verifier, nonce string) string {
 	if pkce, ok := provider.(PKCEEnabledProvider); ok && !pkce.PKCEEnabled() {
 		verifier = ""
 	}
@@ -43,10 +43,7 @@ func (o *oauthPlugin) buildAuthorizationURL(ctx context.Context, provider Provid
 	if nonce != "" {
 		authOpts = append(authOpts, oauth2.SetAuthURLParam("nonce", nonce))
 	}
-	if builder, ok := provider.(AuthorizationURLBuilder); ok {
-		return builder.BuildAuthorizationURL(ctx, stateToken, verifier, config.RedirectURL)
-	}
-	return BuildAuthCodeURL(config, stateToken, verifier, authOpts...), nil
+	return BuildAuthCodeURL(config, stateToken, verifier, authOpts...)
 }
 
 func (o *oauthPlugin) exchangeCodeForTokens(ctx context.Context, provider Provider, code, codeVerifier string) (*TokenResponse, error) {
@@ -117,11 +114,7 @@ func (o *oauthPlugin) GetAuthorizationURL(ctx context.Context, providerName stri
 		return "", "", err
 	}
 
-	url, err := o.buildAuthorizationURL(ctx, provider, stateToken, verifier, nonce)
-	if err != nil {
-		return "", "", err
-	}
-	return url, cookieValue, nil
+	return o.buildAuthorizationURL(provider, stateToken, verifier, nonce), cookieValue, nil
 }
 
 // ExchangeAuthorizationCodeForTokens exchanges the authorization code for tokens.

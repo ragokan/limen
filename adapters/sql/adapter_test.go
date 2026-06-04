@@ -12,7 +12,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-func setupTestDB(t *testing.T) *Adapter {
+func setupTestDB(t testing.TB) *Adapter {
 	t.Helper()
 
 	db, err := sql.Open("sqlite", ":memory:")
@@ -21,10 +21,10 @@ func setupTestDB(t *testing.T) *Adapter {
 	}
 	t.Cleanup(func() { db.Close() })
 
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "test_items" (
-		"id" INTEGER PRIMARY KEY AUTOINCREMENT,
-		"name" TEXT NOT NULL,
-		"email" TEXT,
+	_, err = db.ExecContext(t.Context(), `CREATE TABLE IF NOT EXISTS "test_items" (
+			"id" INTEGER PRIMARY KEY AUTOINCREMENT,
+			"name" TEXT NOT NULL,
+			"email" TEXT,
 		"age" INTEGER DEFAULT 0,
 		"status" TEXT DEFAULT 'active'
 	)`)
@@ -260,6 +260,52 @@ func TestWhereConditions(t *testing.T) {
 			assert.Len(t, results, tt.wantCount)
 		})
 	}
+}
+
+func TestWhereConditions_EmptyInIsSafe(t *testing.T) {
+	t.Parallel()
+
+	adapter := setupTestDB(t)
+	ctx := context.Background()
+
+	err := adapter.Create(ctx, "test_items", map[string]any{"name": "Alice"})
+	assert.NoError(t, err)
+
+	results, err := adapter.FindMany(ctx, "test_items", []limen.Where{
+		limen.In("name", []any{}),
+	}, nil)
+	assert.NoError(t, err)
+	assert.Empty(t, results)
+
+	results, err = adapter.FindMany(ctx, "test_items", []limen.Where{
+		limen.NotIn("name", []any{}),
+	}, nil)
+	assert.NoError(t, err)
+	assert.Len(t, results, 1)
+}
+
+func TestWhereConditions_InvalidConditionReturnsError(t *testing.T) {
+	t.Parallel()
+
+	adapter := setupTestDB(t)
+	ctx := context.Background()
+
+	_, err := adapter.FindMany(ctx, "test_items", []limen.Where{
+		{Column: "name", Operator: limen.OpContains, Value: 123},
+	}, nil)
+	assert.ErrorIs(t, err, limen.ErrInvalidCondition)
+}
+
+func TestOrderBy_InvalidDirectionReturnsError(t *testing.T) {
+	t.Parallel()
+
+	adapter := setupTestDB(t)
+	ctx := context.Background()
+
+	_, err := adapter.FindMany(ctx, "test_items", nil, &limen.QueryOptions{
+		OrderBy: []limen.OrderBy{{Column: "name", Direction: "DROP TABLE"}},
+	})
+	assert.ErrorIs(t, err, limen.ErrInvalidCondition)
 }
 
 func TestUpdate_RequiresConditions(t *testing.T) {

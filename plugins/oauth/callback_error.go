@@ -27,8 +27,8 @@ func (e *CallbackError) Error() string {
 // forward them in redirects or JSON responses.
 func (e *CallbackError) ToLimenError() *limen.LimenError {
 	details := map[string]string{
-		"code":              e.Code,
-		"error_description": e.Description,
+		callbackParamCode:             e.Code,
+		callbackParamErrorDescription: e.Description,
 	}
 	msg := e.Description
 	if msg == "" {
@@ -40,13 +40,13 @@ func (e *CallbackError) ToLimenError() *limen.LimenError {
 // callbackErrorFromQuery extracts an OAuth error from callback query parameters.
 // Returns nil when the "error" param is absent (i.e. no provider error).
 func callbackErrorFromQuery(q url.Values) *CallbackError {
-	code := q.Get("error")
+	code := q.Get(callbackParamError)
 	if code == "" {
 		return nil
 	}
 	return &CallbackError{
 		Code:        code,
-		Description: q.Get("error_description"),
+		Description: q.Get(callbackParamErrorDescription),
 	}
 }
 
@@ -59,10 +59,10 @@ func appendOAuthErrorParams(rawURL string, code, description string) string {
 	}
 	q := u.Query()
 	if code != "" {
-		q.Set("error", code)
+		q.Set(callbackParamError, code)
 	}
 	if description != "" {
-		q.Set("error_description", description)
+		q.Set(callbackParamErrorDescription, description)
 	}
 	u.RawQuery = q.Encode()
 	return u.String()

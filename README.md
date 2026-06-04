@@ -30,6 +30,8 @@ Out of the box, Limen provides:
 - OAuth 2.0
 - Two-factor authentication
 - Session management
+- Optional cache-backed sessions and rate limiting
+- CLI schema export and migration generation
 - ...and more
 
 Bring your own database, bring your own framework — Limen adapts to your stack, not the other way around.
@@ -103,6 +105,48 @@ Alternatively, set the `LIMEN_SECRET` environment variable and omit the `Secret`
 For a more complete example with OAuth providers, two-factor auth, and Gin integration, see the [examples](examples/).
 
 For full configuration options, usage, and plugin APIs, visit **[limenauth.dev](https://limenauth.dev)**.
+
+## Development
+
+This repository is a Go workspace. The checked-in [go.work](go.work) file makes
+root, adapter, plugin, CLI, and example modules resolve to the current branch.
+
+Run all non-example module tests:
+
+```bash
+for dir in $(find . -name go.mod -not -path './examples/*' -exec dirname {} \; | sort); do
+  (cd "$dir" && go test -count=1 ./...)
+done
+```
+
+Compile examples:
+
+```bash
+for dir in $(find examples -name go.mod -exec dirname {} \; | sort); do
+  (cd "$dir" && go test -run '^$' ./...)
+done
+```
+
+Run benchmark suites and PostgreSQL 18 integration tests:
+
+```bash
+./scripts/run-benchmarks.sh
+./scripts/test-postgres18.sh
+```
+
+PostgreSQL cleanup:
+
+```go
+auth, err := limen.New(&limen.Config{
+	Database: db,
+	Secret:   secret,
+	Cleanup:  limen.NewDefaultCleanupConfig(limen.WithCleanupOnInit(true)),
+})
+```
+
+```go
+err := auth.CleanupExpired(ctx)
+```
 
 ## Contributing
 

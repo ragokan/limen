@@ -12,6 +12,11 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
+const (
+	maxPHCMemoryKiB = 1024 * 1024
+	maxPHCTime      = 10
+)
+
 // passwordHasherConfig defines the configuration parameters for Argon2id hashing.
 type passwordHasherConfig struct {
 	time      uint32 // Number of iterations (t parameter)
@@ -83,13 +88,36 @@ func (p *passwordHasher) verifyPassword(password []byte, hash string) (bool, err
 	if hashInfo.algorithm != "argon2id" || hashInfo.version != 19 {
 		return false, errors.New("unsupported Argon2 variant or version")
 	}
+	if err := validateHashInfo(hashInfo); err != nil {
+		return false, err
+	}
 
-	computedHash := p.hash(password, hashInfo.salt)
+	computedHash := argon2.IDKey(
+		password,
+		hashInfo.salt,
+		hashInfo.time,
+		hashInfo.memory,
+		hashInfo.parallel,
+		hashInfo.keyLength,
+	)
 
 	// Compare computed hash with stored hash using constant-time comparison
 	// to prevent timing attacks
 	matches := subtle.ConstantTimeCompare(computedHash, hashInfo.hash) == 1
 	return matches, nil
+}
+
+func validateHashInfo(info *hashInfo) error {
+	if info.memory == 0 || info.time == 0 || info.parallel == 0 || info.keyLength == 0 {
+		return errors.New("invalid Argon2 parameters")
+	}
+	if info.memory > maxPHCMemoryKiB || info.time > maxPHCTime {
+		return errors.New("Argon2 parameters exceed verification limits")
+	}
+	if len(info.salt) == 0 || len(info.hash) == 0 {
+		return errors.New("invalid Argon2 salt or hash")
+	}
+	return nil
 }
 
 // Generate Argon2id hash using the PasswordHasher parameters

@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"maps"
 	"time"
 
 	"github.com/ragokan/limen"
@@ -38,7 +39,7 @@ func (p *magicLinkPlugin) newMagicLinkState(email string, opts *RequestMagicLink
 		RedirectURI:        opts.RedirectURI,
 		NewUserRedirectURI: opts.NewUserRedirectURI,
 		ErrorRedirectURI:   opts.ErrorRedirectURI,
-		AdditionalData:     opts.AdditionalData,
+		AdditionalData:     maps.Clone(opts.AdditionalData),
 		Nonce:              p.generateStateNonce(),
 	}
 

@@ -3,9 +3,11 @@ package limen
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func serveRequest(t *testing.T, router *router, method, path string) *httptest.ResponseRecorder {
@@ -84,6 +86,103 @@ func TestRouterHEADWithoutRegisteredHandler(t *testing.T) {
 	w := serveRequest(t, router, http.MethodHead, "/test")
 
 	assert.Equal(t, http.StatusNotFound, w.Code, "HEAD should not fall back to GET handler")
+}
+
+func TestRouterUnknownMethodDoesNotMatchGET(t *testing.T) {
+	t.Parallel()
+
+	router := newRouter(nil)
+	router.AddRoute(MethodGET, "/test", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}, "test", nil)
+
+	w := serveRequest(t, router, "BREW", "/test")
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+}
+
+func TestRouterUnknownMethodMatchesANY(t *testing.T) {
+	t.Parallel()
+
+	router := newRouter(nil)
+	router.AddRoute(MethodANY, "/test", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}, "test", nil)
+
+	w := serveRequest(t, router, "BREW", "/test")
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestRouterAddRouteUnknownMethodPanics(t *testing.T) {
+	t.Parallel()
+
+	router := newRouter(nil)
+
+	assert.Panics(t, func() {
+		router.AddRoute(HTTPMethod("BREW"), "/test", func(w http.ResponseWriter, r *http.Request) {}, "test", nil)
+	})
+}
+
+func TestRouterAfterHooksPreserveDirectWrite(t *testing.T) {
+	t.Parallel()
+
+	router := newRouter(newTestResponder(t))
+	router.AddHooks(&Hooks{After: []*Hook{{
+		Run: func(ctx *HookContext) bool {
+			return true
+		},
+	}}})
+	router.AddRoute(MethodGET, "/test", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+		_, _ = w.Write([]byte("created"))
+	}, "test", nil)
+
+	w := serveRequest(t, router, http.MethodGet, "/test")
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+	assert.Equal(t, "created", w.Body.String())
+}
+
+func TestRouterAfterHooksCanModifyDirectWrite(t *testing.T) {
+	t.Parallel()
+
+	router := newRouter(newTestResponder(t))
+	router.AddHooks(&Hooks{After: []*Hook{{
+		Run: func(ctx *HookContext) bool {
+			ctx.ModifyResponse(http.StatusAccepted, map[string]any{"modified": true})
+			return true
+		},
+	}}})
+	router.AddRoute(MethodGET, "/test", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+		_, _ = w.Write([]byte("created"))
+	}, "test", nil)
+
+	w := serveRequest(t, router, http.MethodGet, "/test")
+
+	assert.Equal(t, http.StatusAccepted, w.Code)
+	assert.JSONEq(t, `{"modified":true}`, w.Body.String())
+}
+
+func TestRouterBodyTooLargeReturns413(t *testing.T) {
+	t.Parallel()
+
+	router := newRouter(newTestResponder(t))
+	router.maxBodyBytes = 8
+	called := false
+	router.AddRoute(MethodPOST, "/test", func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		w.WriteHeader(http.StatusOK)
+	}, "test", nil)
+
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/test", strings.NewReader(`{"email":"large@example.com"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusRequestEntityTooLarge, w.Code)
+	assert.False(t, called)
 }
 
 func TestGetParams(t *testing.T) {
@@ -261,4 +360,39 @@ func TestRouterMiddlewareWithParams(t *testing.T) {
 	assert.True(t, middlewareCalled)
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "user-123", w.Body.String())
+}
+
+func TestRouterAdditionalFieldsContextReadsParsedBody(t *testing.T) {
+	t.Parallel()
+
+	schema := NewDefaultSchemaConfig(WithSchemaUser(WithUserAdditionalFields(func(ctx *AdditionalFieldsContext) (map[string]any, error) {
+		return map[string]any{
+			string(UserSchemaFirstNameField): ctx.GetBodyValue("first_name"),
+		}, nil
+	})))
+	l, err := New(&Config{
+		BaseURL:  defaultBaseURL,
+		Database: newTestMemoryAdapter(t),
+		Secret:   testSecret,
+		Schema:   schema,
+		Cleanup:  NewDefaultCleanupConfig(WithCleanupOnInit(false)),
+	})
+	require.NoError(t, err)
+
+	router := newRouter(nil, middlewareAdditionalFieldsContext())
+	router.AddRoute(MethodPOST, "/users", func(w http.ResponseWriter, r *http.Request) {
+		err := l.core.DBAction.CreateUser(r.Context(), &User{Email: "body@test.com"}, nil)
+		require.NoError(t, err)
+		w.WriteHeader(http.StatusNoContent)
+	}, "create-user", nil)
+
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/users", strings.NewReader(`{"first_name":"Body"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusNoContent, w.Code)
+	user, err := l.core.DBAction.FindUserByEmail(t.Context(), "body@test.com")
+	require.NoError(t, err)
+	assert.Equal(t, "Body", user.Raw()[string(UserSchemaFirstNameField)])
 }

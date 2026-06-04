@@ -45,4 +45,19 @@ Out of scope:
 - Missing security hardening that does not correspond to a concrete,
   reproducible vulnerability
 
+## Security Features
+
+Limen's OAuth core validates trusted redirect targets, uses PKCE by default,
+supports state storage, and validates OIDC nonce claims for ID-token based
+providers. Provider refresh tokens are encrypted at rest by default.
+
+Provider email verification is treated conservatively. OAuth sign-in can create
+or use an already-linked provider account even when the provider does not expose
+a trusted email-verification signal, but implicit email-based linking to an
+existing local user requires a verified provider email.
+
+Magic-link request metadata is stored as magic-link state only by default. It is
+not persisted to newly-created user records unless the application explicitly
+configures a mapper.
+
 Thank you for helping keep Limen and its users safe.

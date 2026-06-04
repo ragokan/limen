@@ -19,6 +19,8 @@ var (
 	ErrRecordNotFound          = NewLimenError("record not found", http.StatusNotFound, nil)
 	ErrEmptyText               = errors.New("text is empty and cannot be encrypted or decrypted")
 	ErrMissingConditions       = errors.New("missing query conditions")
+	ErrInvalidCondition        = errors.New("invalid query condition")
+	ErrEmptyConditionValues    = errors.New("empty query condition values")
 )
 
 // Session-specific errors

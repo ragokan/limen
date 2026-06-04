@@ -30,7 +30,7 @@ type testMemoryAdapter struct {
 	tables map[SchemaTableName]*testMemTable
 }
 
-func newTestMemoryAdapter(t *testing.T) *testMemoryAdapter {
+func newTestMemoryAdapter(t testing.TB) *testMemoryAdapter {
 	t.Helper()
 	return &testMemoryAdapter{
 		tables: make(map[SchemaTableName]*testMemTable),
@@ -368,10 +368,11 @@ func NewTestLimen(t *testing.T, plugins ...Plugin) (*Limen, *LimenCore) {
 	t.Helper()
 
 	l, err := New(&Config{
-		BaseURL:  "http://localhost:8080",
+		BaseURL:  defaultBaseURL,
 		Database: newTestMemoryAdapter(t),
 		Secret:   testSecret,
 		Plugins:  plugins,
+		Cleanup:  NewDefaultCleanupConfig(WithCleanupOnInit(false)),
 	})
 	if err != nil {
 		t.Fatalf("NewTestLimen: %v", err)
@@ -384,7 +385,7 @@ func NewTestLimen(t *testing.T, plugins ...Plugin) (*Limen, *LimenCore) {
 func SeedTestUser(t *testing.T, l *Limen, email string) *User {
 	t.Helper()
 	ctx := context.Background()
-	extra := map[string]any{"first_name": "Test"}
+	extra := map[string]any{string(UserSchemaFirstNameField): "Test"}
 	if err := l.core.DBAction.CreateUser(ctx, &User{Email: email}, extra); err != nil {
 		t.Fatalf("SeedTestUser: %v", err)
 	}
