@@ -4,9 +4,9 @@ go 1.25.0
 
 require (
 	github.com/gin-gonic/gin v1.11.0
-	github.com/ragokan/limen v0.1.4
-	github.com/ragokan/limen/adapters/gorm v0.1.4
-	github.com/ragokan/limen/plugins/credential-password v0.1.4
+	github.com/ragokan/limen v0.1.5
+	github.com/ragokan/limen/adapters/gorm v0.1.5
+	github.com/ragokan/limen/plugins/credential-password v0.1.5
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.30.1
 )
