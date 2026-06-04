@@ -1,0 +1,43 @@
+# Benchmark root
+Thu Jun  4 15:20:11 UTC 2026
+go version go1.25.10 linux/amd64
+4b5594a
+?? benchmarks/results/ci-26961254493-manifest.txt
+?? benchmarks/results/ci-26961254493-root.txt
+
+goos: linux
+goarch: amd64
+pkg: github.com/ragokan/limen
+cpu: AMD EPYC 7763 64-Core Processor                
+BenchmarkDatabaseFindOneUser-4            	   99694	     11983 ns/op	    9272 B/op	     205 allocs/op
+BenchmarkDatabaseFindOneUser-4            	  102909	     12077 ns/op	    9272 B/op	     205 allocs/op
+BenchmarkDatabaseFindOneUser-4            	  100780	     12232 ns/op	    9272 B/op	     205 allocs/op
+BenchmarkDatabaseFindManyUsers-4          	   33499	     31720 ns/op	   43584 B/op	     303 allocs/op
+BenchmarkDatabaseFindManyUsers-4          	   35397	     32039 ns/op	   43584 B/op	     303 allocs/op
+BenchmarkDatabaseFindManyUsers-4          	   35809	     32000 ns/op	   43584 B/op	     303 allocs/op
+BenchmarkDatabaseCreateUser-4             	  719152	      1784 ns/op	    1215 B/op	      12 allocs/op
+BenchmarkDatabaseCreateUser-4             	  718126	      1864 ns/op	    1215 B/op	      12 allocs/op
+BenchmarkDatabaseCreateUser-4             	  573980	      1938 ns/op	    1215 B/op	      12 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-4   	  519207	      2345 ns/op	     614 B/op	      12 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-4   	  559380	      2243 ns/op	     615 B/op	      12 allocs/op
+BenchmarkRateLimiterCheckCacheSameKey-4   	  541423	      2204 ns/op	     615 B/op	      12 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-4   	 1000000	      1470 ns/op	     391 B/op	       7 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-4   	 1000000	      1397 ns/op	     391 B/op	       7 allocs/op
+BenchmarkRateLimiterCheckCacheNewKeys-4   	 1000000	      1420 ns/op	     391 B/op	       7 allocs/op
+BenchmarkRouterStaticRoute-4              	 1895815	       630.4 ns/op	     880 B/op	       9 allocs/op
+BenchmarkRouterStaticRoute-4              	 1945432	       633.9 ns/op	     880 B/op	       9 allocs/op
+BenchmarkRouterStaticRoute-4              	 1983012	       615.8 ns/op	     880 B/op	       9 allocs/op
+BenchmarkRouterParamRoute-4               	 1256455	       944.8 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterParamRoute-4               	 1274786	       937.4 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterParamRoute-4               	 1267276	       944.9 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterWithMiddleware-4           	 1240365	       960.2 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterWithMiddleware-4           	 1249705	       950.8 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkRouterWithMiddleware-4           	 1269870	       934.5 ns/op	    1600 B/op	      13 allocs/op
+BenchmarkValidatorEmail-4                 	 2372104	       495.5 ns/op	      32 B/op	       2 allocs/op
+BenchmarkValidatorEmail-4                 	 2463876	       493.8 ns/op	      32 B/op	       2 allocs/op
+BenchmarkValidatorEmail-4                 	 2415792	       499.6 ns/op	      32 B/op	       2 allocs/op
+BenchmarkValidateJSONBodyLookup-4         	48891506	        23.29 ns/op	       0 B/op	       0 allocs/op
+BenchmarkValidateJSONBodyLookup-4         	52445244	        23.22 ns/op	       0 B/op	       0 allocs/op
+BenchmarkValidateJSONBodyLookup-4         	52606256	        23.04 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/ragokan/limen	36.808s

@@ -30,6 +30,9 @@ func main() {
 		BaseURL:  "http://localhost:8080",
 		Database: sqladapter.NewPostgreSQL(db),
 		Secret:   []byte("0123456789abcdef0123456789abcdef"),
+		HTTP: limen.NewDefaultHTTPConfig(
+			limen.WithHTTPBasePath("/api/auth"),
+		),
 		Plugins: []limen.Plugin{
 			credentialpassword.New(),
 		},

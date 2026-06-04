@@ -84,6 +84,9 @@ func main() {
 		BaseURL:  "http://localhost:8080",
 		Database: gormadapter.New(db),
 		Secret:   []byte("your-32-byte-secret-key-here!!!!"),
+		HTTP: limen.NewDefaultHTTPConfig(
+			limen.WithHTTPBasePath("/api/auth"),
+		),
 		Plugins: []limen.Plugin{
 			credentialpassword.New(),
 		},
@@ -147,6 +150,8 @@ err := auth.CleanupExpired(ctx)
 Provider behavior, verified-email rules, and Instagram support status are
 documented in [OAuth Providers](docs/oauth-providers.md). PostgreSQL TTL and
 cleanup details are documented in [PostgreSQL Cleanup And TTL](docs/postgres-cleanup.md).
+Benchmarking is documented in [Benchmarking](docs/benchmarking.md). Production
+deployment guidance is documented in [Production Setup](docs/production.md).
 Release/versioning rules are documented in [Releasing](docs/releasing.md).
 
 ## Contributing

@@ -1,0 +1,8 @@
+# Benchmark manifest
+Thu Jun  4 15:20:10 UTC 2026
+go version go1.25.10 linux/amd64
+4b5594a
+?? benchmarks/results/ci-26961254493-manifest.txt
+Linux runnervm3jyl0 6.17.0-1015-azure #15~24.04.1-Ubuntu SMP Wed May  6 22:37:49 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
+LIMEN_POSTGRES_DSN=postgres://limen:limen@127.0.0.1:55432/limen_test?sslmode=disable
+postgres (PostgreSQL) 18.4 (Debian 18.4-1.pgdg13+1)

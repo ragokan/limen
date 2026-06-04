@@ -39,6 +39,37 @@ if err := auth.CleanupExpired(ctx); err != nil {
 Expired sessions are also removed lazily when they are accessed through session
 validation. `ListSessions(ctx, userID)` returns only active database sessions.
 
+## Production Scheduling
+
+For a single-instance service, the default init cleanup is usually enough for
+small deployments. For multi-instance deployments, either leave init cleanup on
+for simple best-effort cleanup, or disable it and run one scheduled cleanup job
+from a worker, cron, or platform scheduler.
+
+Example process-local ticker:
+
+```go
+func runCleanup(ctx context.Context, auth *limen.Limen) error {
+	ticker := time.NewTicker(time.Hour)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+			if err := auth.CleanupExpired(ctx); err != nil {
+				return err
+			}
+		}
+	}
+}
+```
+
+Keep the cleanup interval comfortably below your expected expired-row retention
+window. High-traffic systems should prefer an external scheduler so only one
+process owns periodic cleanup.
+
 ## Indexes
 
 Core schemas include indexes for the cleanup and session-listing paths:

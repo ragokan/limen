@@ -3,6 +3,9 @@
 Limen separates the OAuth core from provider modules. Install only the providers
 your application uses.
 
+Provider behavior below is checked against provider documentation as of
+2026-06-04.
+
 ## Provider Matrix
 
 | Provider | Module | Env vars | Default scopes | Email verification | Notes |
@@ -25,6 +28,96 @@ the current Instagram APIs do not provide a trusted user email suitable for
 Limen's email-based account model. Use the generic provider only if your
 application has an additional trusted email source.
 
+## Provider Setup Notes
+
+All redirect URLs should use your configured `BaseURL` and HTTP base path. With
+the default HTTP path, provider callbacks are:
+
+```text
+https://auth.example.com/auth/oauth/{provider}/callback
+```
+
+Use explicit redirect URLs when your public callback differs from `BaseURL`, for
+example behind a gateway:
+
+```go
+oauthgoogle.New(
+	oauthgoogle.WithRedirectURL("https://auth.example.com/auth/oauth/google/callback"),
+)
+```
+
+Provider constructors read their documented environment variables by default, so
+typical wiring only needs to register the providers:
+
+```go
+auth, err := limen.New(&limen.Config{
+	BaseURL:  "https://auth.example.com",
+	Database: db,
+	Secret:   []byte(os.Getenv("LIMEN_SECRET")),
+	Plugins: []limen.Plugin{
+		oauth.New(
+			oauth.WithProviders(
+				oauthgoogle.New(),
+				oauthapple.New(),
+				oauthfacebook.New(),
+				oauthlinkedin.New(),
+			),
+		),
+	},
+})
+```
+
+If you mount Limen under a custom path, make the HTTP base path and registered
+provider callbacks match:
+
+```go
+HTTP: limen.NewDefaultHTTPConfig(
+	limen.WithHTTPBasePath("/api/auth"),
+)
+```
+
+```text
+https://auth.example.com/api/auth/oauth/google/callback
+```
+
+### Google
+
+Register the exact callback URL in Google Cloud Console. Keep the default
+`openid`, `email`, and `profile` scopes unless your application has a specific
+reason to narrow them. Limen validates the ID token with issuer
+`https://accounts.google.com`, verifies the nonce, and reads `email_verified`
+from the token claims.
+
+### Apple
+
+Use a Services ID as `APPLE_CLIENT_ID` for web sign-in and provide the Apple
+client-secret JWT as `APPLE_CLIENT_SECRET`. Apple sends callbacks with
+`response_mode=form_post`; Limen stores the POST body briefly and resumes the
+normal callback flow. Apple only sends the user's name on the first
+authorization, so persist it when available.
+
+### Facebook
+
+Register the Facebook Login callback in Meta for Developers and request
+`email`, `public_profile`. The Graph API profile response can include an email,
+but it does not normally include a reliable email-verification claim. Limen
+therefore treats Facebook profile emails as unverified for implicit account
+linking.
+
+### Instagram
+
+Instagram is not exposed as a bundled sign-in provider. Current Instagram APIs
+are profile/media APIs rather than a dependable email identity provider. Do not
+use Instagram as the only login path for Limen's email-based account model
+unless your application collects and verifies email separately.
+
+### LinkedIn
+
+Use the Sign In with LinkedIn using OpenID Connect product and request
+`openid`, `profile`, and `email`. Limen validates ID tokens with issuer
+`https://www.linkedin.com/oauth`, matching LinkedIn's OIDC discovery path, and
+uses the optional `email_verified` claim when LinkedIn returns it.
+
 ## Verified Email Rules
 
 Limen treats email ownership conservatively:
@@ -45,3 +138,16 @@ mapping profile claims. Providers that support nonce bind the authorization
 request to the ID token and reject nonce mismatch. The OAuth state also records
 the expected provider, so a callback for one provider cannot be replayed through
 another provider route.
+
+## Provider Documentation
+
+- Google OpenID Connect:
+  <https://developers.google.com/identity/openid-connect/openid-connect>
+- Sign in with Apple:
+  <https://developer.apple.com/documentation/signinwithapple>
+- Facebook Login permissions:
+  <https://developers.facebook.com/docs/facebook-login/permissions>
+- Instagram API with Instagram Login:
+  <https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login>
+- Sign In with LinkedIn using OpenID Connect:
+  <https://learn.microsoft.com/linkedin/consumer/integrations/self-serve/sign-in-with-linkedin-v2>

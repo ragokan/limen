@@ -1,0 +1,12 @@
+# Benchmark oauth
+Thu Jun  4 15:22:35 UTC 2026
+go version go1.25.10 linux/amd64
+4b5594a
+?? benchmarks/results/ci-26961254493-gorm.txt
+?? benchmarks/results/ci-26961254493-manifest.txt
+?? benchmarks/results/ci-26961254493-oauth.txt
+?? benchmarks/results/ci-26961254493-root.txt
+?? benchmarks/results/ci-26961254493-sql.txt
+
+PASS
+ok  	github.com/ragokan/limen/plugins/oauth	0.004s

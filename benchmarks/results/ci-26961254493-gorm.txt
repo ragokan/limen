@@ -1,0 +1,33 @@
+# Benchmark gorm
+Thu Jun  4 15:21:37 UTC 2026
+go version go1.25.10 linux/amd64
+4b5594a
+?? benchmarks/results/ci-26961254493-gorm.txt
+?? benchmarks/results/ci-26961254493-manifest.txt
+?? benchmarks/results/ci-26961254493-root.txt
+?? benchmarks/results/ci-26961254493-sql.txt
+
+goos: linux
+goarch: amd64
+pkg: github.com/ragokan/limen/adapters/gorm
+cpu: AMD EPYC 7763 64-Core Processor                
+BenchmarkGormAdapterFindOne-4     	   44365	     25619 ns/op	    5867 B/op	     116 allocs/op
+BenchmarkGormAdapterFindOne-4     	   43657	     25652 ns/op	    5867 B/op	     116 allocs/op
+BenchmarkGormAdapterFindOne-4     	   45234	     25657 ns/op	    5867 B/op	     116 allocs/op
+BenchmarkGormAdapterFindMany-4    	    3290	    344874 ns/op	   78777 B/op	    2681 allocs/op
+BenchmarkGormAdapterFindMany-4    	    3495	    338592 ns/op	   78777 B/op	    2681 allocs/op
+BenchmarkGormAdapterFindMany-4    	    3219	    349135 ns/op	   78778 B/op	    2681 allocs/op
+BenchmarkGormAdapterCreate-4      	   36924	     32598 ns/op	    7194 B/op	     100 allocs/op
+BenchmarkGormAdapterCreate-4      	   40398	     32405 ns/op	    7193 B/op	     100 allocs/op
+BenchmarkGormAdapterCreate-4      	   39001	     31988 ns/op	    7193 B/op	     100 allocs/op
+BenchmarkGormPostgresFindOne-4    	    5607	    211807 ns/op	    5900 B/op	      96 allocs/op
+BenchmarkGormPostgresFindOne-4    	    5685	    212417 ns/op	    5899 B/op	      96 allocs/op
+BenchmarkGormPostgresFindOne-4    	    5581	    208755 ns/op	    5899 B/op	      96 allocs/op
+BenchmarkGormPostgresFindMany-4   	    3040	    400480 ns/op	   59763 B/op	    1869 allocs/op
+BenchmarkGormPostgresFindMany-4   	    2812	    396036 ns/op	   59763 B/op	    1869 allocs/op
+BenchmarkGormPostgresFindMany-4   	    2816	    402999 ns/op	   59763 B/op	    1869 allocs/op
+BenchmarkGormPostgresCreate-4     	    1792	    687393 ns/op	    6788 B/op	      87 allocs/op
+BenchmarkGormPostgresCreate-4     	    1812	    670094 ns/op	    6786 B/op	      87 allocs/op
+BenchmarkGormPostgresCreate-4     	    1803	    674632 ns/op	    6787 B/op	      87 allocs/op
+PASS
+ok  	github.com/ragokan/limen/adapters/gorm	21.858s

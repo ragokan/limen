@@ -4,6 +4,7 @@ set -eu
 count="${BENCH_COUNT:-5}"
 out_dir="${BENCH_OUT_DIR:-benchmarks/results}"
 name="${BENCH_NAME:-micro-optimizations}"
+git_status="$(git status --short)"
 mkdir -p "$out_dir"
 
 manifest="$out_dir/${name}-manifest.txt"
@@ -12,7 +13,9 @@ manifest="$out_dir/${name}-manifest.txt"
 	date
 	go version
 	git rev-parse --short HEAD
-	git status --short
+	if [ "$git_status" != "" ]; then
+		printf "%s\n" "$git_status"
+	fi
 	uname -a
 	if [ "${LIMEN_POSTGRES_DSN:-}" != "" ]; then
 		echo "LIMEN_POSTGRES_DSN=${LIMEN_POSTGRES_DSN}"
@@ -29,7 +32,9 @@ run_one() {
 		date
 		go version
 		git rev-parse --short HEAD
-		git status --short
+		if [ "$git_status" != "" ]; then
+			printf "%s\n" "$git_status"
+		fi
 		echo
 		(cd "$dir" && go test -run '^$' -bench . -benchmem -count="$count" ./...)
 	} | tee "$out"

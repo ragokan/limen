@@ -34,8 +34,14 @@ DATABASE_URL="postgres://..." go run ./examples/adapters/sql
 
 The `basic` and `gin` examples also include a custom `GET /api/profile` endpoint that demonstrates how to use `auth.GetSession(r)` to read the authenticated user outside of Limen's built-in routes.
 
+Examples mount Limen under `/api/auth` and set
+`limen.WithHTTPBasePath("/api/auth")`, so built-in routes live at paths such as
+`/api/auth/signin`, `/api/auth/me`, and `/api/auth/oauth/google/authorize`.
+
 OAuth provider modules, default scopes, verified-email behavior, and unsupported
 Instagram sign-in status are summarized in [OAuth Providers](../docs/oauth-providers.md).
+Production deployment defaults and security settings are summarized in
+[Production Setup](../docs/production.md).
 
 ## PostgreSQL 18
 

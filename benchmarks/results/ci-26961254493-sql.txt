@@ -1,0 +1,32 @@
+# Benchmark sql
+Thu Jun  4 15:20:54 UTC 2026
+go version go1.25.10 linux/amd64
+4b5594a
+?? benchmarks/results/ci-26961254493-manifest.txt
+?? benchmarks/results/ci-26961254493-root.txt
+?? benchmarks/results/ci-26961254493-sql.txt
+
+goos: linux
+goarch: amd64
+pkg: github.com/ragokan/limen/adapters/sql
+cpu: AMD EPYC 7763 64-Core Processor                
+BenchmarkSQLAdapterFindOne-4     	   25834	     46979 ns/op	    1408 B/op	      41 allocs/op
+BenchmarkSQLAdapterFindOne-4     	   25810	     46883 ns/op	    1408 B/op	      41 allocs/op
+BenchmarkSQLAdapterFindOne-4     	   25798	     47016 ns/op	    1408 B/op	      41 allocs/op
+BenchmarkSQLAdapterFindMany-4    	    6097	    179208 ns/op	   62785 B/op	    1725 allocs/op
+BenchmarkSQLAdapterFindMany-4    	    6481	    197307 ns/op	   62784 B/op	    1725 allocs/op
+BenchmarkSQLAdapterFindMany-4    	    6337	    182249 ns/op	   62784 B/op	    1725 allocs/op
+BenchmarkSQLAdapterCreate-4      	   23325	     50864 ns/op	    1455 B/op	      41 allocs/op
+BenchmarkSQLAdapterCreate-4      	   22632	     52276 ns/op	    1455 B/op	      41 allocs/op
+BenchmarkSQLAdapterCreate-4      	   23468	     51671 ns/op	    1455 B/op	      41 allocs/op
+BenchmarkSQLPostgresFindOne-4    	    6045	    188657 ns/op	    2064 B/op	      41 allocs/op
+BenchmarkSQLPostgresFindOne-4    	    6382	    188882 ns/op	    2064 B/op	      41 allocs/op
+BenchmarkSQLPostgresFindOne-4    	    6062	    189618 ns/op	    2064 B/op	      41 allocs/op
+BenchmarkSQLPostgresFindMany-4   	    4050	    302070 ns/op	   56232 B/op	    1132 allocs/op
+BenchmarkSQLPostgresFindMany-4   	    3498	    302180 ns/op	   56232 B/op	    1132 allocs/op
+BenchmarkSQLPostgresFindMany-4   	    3651	    299040 ns/op	   56232 B/op	    1132 allocs/op
+BenchmarkSQLPostgresCreate-4     	    3034	    333251 ns/op	    1637 B/op	      39 allocs/op
+BenchmarkSQLPostgresCreate-4     	    3925	    327900 ns/op	    1637 B/op	      39 allocs/op
+BenchmarkSQLPostgresCreate-4     	    3504	    331539 ns/op	    1637 B/op	      39 allocs/op
+PASS
+ok  	github.com/ragokan/limen/adapters/sql	21.415s
