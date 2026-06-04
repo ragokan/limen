@@ -3,7 +3,6 @@ go 1.25.0
 use (
 	.
 	./adapters/gorm
-	./adapters/redis
 	./adapters/sql
 	./cmd/limen
 	./examples/adapters/gorm

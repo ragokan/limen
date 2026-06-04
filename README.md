@@ -134,18 +134,18 @@ Run benchmark suites and PostgreSQL 18 integration tests:
 ./scripts/test-postgres18.sh
 ```
 
-Optional Redis cache adapter:
+PostgreSQL cleanup:
 
-```bash
-go get github.com/ragokan/limen/adapters/redis
+```go
+auth, err := limen.New(&limen.Config{
+	Database: db,
+	Secret:   secret,
+	Cleanup:  limen.NewDefaultCleanupConfig(limen.WithCleanupOnInit(true)),
+})
 ```
 
 ```go
-cache := redisadapter.NewClient(&redis.Options{Addr: "127.0.0.1:6379"})
-auth, err := limen.New(&limen.Config{
-	CacheStore: cache,
-	// ...
-})
+err := auth.CleanupExpired(ctx)
 ```
 
 ## Contributing

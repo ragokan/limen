@@ -24,7 +24,6 @@ run_one() {
 run_one "." "root"
 run_one "./adapters/sql" "sql"
 run_one "./adapters/gorm" "gorm"
-run_one "./adapters/redis" "redis"
 run_one "./plugins/oauth" "oauth"
 run_one "./plugins/session-jwt" "session-jwt"
 run_one "./plugins/credential-password" "credential-password"

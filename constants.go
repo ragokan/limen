@@ -22,8 +22,7 @@ type StoreType string
 const (
 	// StoreTypeDatabase stores data in the primary database via the DatabaseAdapter.
 	StoreTypeDatabase StoreType = "database"
-	// StoreTypeCache stores data in the shared CacheAdapter (defaults to in-memory;
-	// swap with a Redis adapter for multi-instance deployments).
+	// StoreTypeCache stores data in the shared CacheAdapter.
 	StoreTypeCache StoreType = "cache_store"
 )
 

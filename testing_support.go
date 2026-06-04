@@ -372,6 +372,7 @@ func NewTestLimen(t *testing.T, plugins ...Plugin) (*Limen, *LimenCore) {
 		Database: newTestMemoryAdapter(t),
 		Secret:   testSecret,
 		Plugins:  plugins,
+		Cleanup:  NewDefaultCleanupConfig(WithCleanupOnInit(false)),
 	})
 	if err != nil {
 		t.Fatalf("NewTestLimen: %v", err)
