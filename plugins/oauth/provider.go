@@ -62,3 +62,10 @@ const (
 type ResponseModeProvider interface {
 	ResponseMode() ResponseMode
 }
+
+// IDTokenNonceProvider is optional. If a Provider implements it and returns true,
+// the base module sends a nonce authorization parameter and exposes the expected
+// nonce to GetUserInfo for provider-side ID token claim validation.
+type IDTokenNonceProvider interface {
+	IDTokenNonceEnabled() bool
+}

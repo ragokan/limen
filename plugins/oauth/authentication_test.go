@@ -51,6 +51,14 @@ func (p *responseModeProvider) ResponseMode() ResponseMode {
 	return ResponseModeFormPost
 }
 
+type nonceProvider struct {
+	testProvider
+}
+
+func (p *nonceProvider) IDTokenNonceEnabled() bool {
+	return true
+}
+
 func TestGetAuthorizationURL(t *testing.T) {
 	t.Parallel()
 
@@ -146,6 +154,29 @@ func TestGetAuthorizationURL(t *testing.T) {
 		parsed, parseErr := url.Parse(authURL)
 		require.NoError(t, parseErr)
 		assert.NotEmpty(t, parsed.Query().Get("state"))
+	})
+
+	t.Run("nonce provider includes nonce param and stores expected nonce", func(t *testing.T) {
+		t.Parallel()
+
+		provider := &nonceProvider{testProvider: testProvider{name: "nonce-provider"}}
+		l, plugin := newTestOAuthPlugin(t, WithProviders(provider))
+		_ = l.Handler()
+
+		authURL, cookieValue, err := plugin.GetAuthorizationURL(context.Background(), "nonce-provider", &OAuthAuthorizeURLData{})
+		require.NoError(t, err)
+		require.NotEmpty(t, cookieValue)
+
+		parsed, parseErr := url.Parse(authURL)
+		require.NoError(t, parseErr)
+		nonce := parsed.Query().Get("nonce")
+		stateToken := parsed.Query().Get("state")
+		require.NotEmpty(t, nonce)
+		require.NotEmpty(t, stateToken)
+
+		stateData, err := plugin.stateStore.Validate(context.Background(), stateToken, cookieValue)
+		require.NoError(t, err)
+		assert.Equal(t, nonce, stateData[nonceDataKey])
 	})
 }
 

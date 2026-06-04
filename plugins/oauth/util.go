@@ -3,6 +3,8 @@ package oauth
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -18,6 +20,7 @@ import (
 )
 
 type callbackParamsContextKey struct{}
+type idTokenNonceContextKey struct{}
 
 // ContextWithCallbackParams returns a child context carrying the raw callback
 // query parameters. Providers can retrieve them via CallbackParams inside
@@ -30,6 +33,38 @@ func ContextWithCallbackParams(ctx context.Context, params url.Values) context.C
 func CallbackParams(ctx context.Context) url.Values {
 	v, _ := ctx.Value(callbackParamsContextKey{}).(url.Values)
 	return v
+}
+
+// ContextWithIDTokenNonce returns a child context carrying the expected OIDC nonce.
+func ContextWithIDTokenNonce(ctx context.Context, nonce string) context.Context {
+	return context.WithValue(ctx, idTokenNonceContextKey{}, nonce)
+}
+
+// IDTokenNonce retrieves the expected OIDC nonce stored in ctx, or an empty string.
+func IDTokenNonce(ctx context.Context) string {
+	v, _ := ctx.Value(idTokenNonceContextKey{}).(string)
+	return v
+}
+
+// VerifyIDTokenNonce verifies the nonce claim against the expected OAuth state nonce.
+// Apple may return the SHA-256 hex digest of the sent nonce; raw equality is accepted too.
+func VerifyIDTokenNonce(claims map[string]any, expected string) error {
+	if expected == "" {
+		return fmt.Errorf("id token nonce is required")
+	}
+	claim, _ := claims["nonce"].(string)
+	if claim == "" {
+		return fmt.Errorf("id token missing nonce claim")
+	}
+	if subtle.ConstantTimeCompare([]byte(claim), []byte(expected)) == 1 {
+		return nil
+	}
+	sum := sha256.Sum256([]byte(expected))
+	digest := hex.EncodeToString(sum[:])
+	if subtle.ConstantTimeCompare([]byte(claim), []byte(digest)) == 1 {
+		return nil
+	}
+	return fmt.Errorf("id token nonce mismatch")
 }
 
 // BuildAuthCodeURL builds the OAuth2 authorization URL using the provider's config.

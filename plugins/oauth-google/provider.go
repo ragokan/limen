@@ -8,10 +8,14 @@ import (
 	"os"
 
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 
 	"github.com/thecodearcher/limen/plugins/oauth"
 )
+
+var googleEndpoint = oauth2.Endpoint{
+	AuthURL:  "https://accounts.google.com/o/oauth2/v2/auth",
+	TokenURL: "https://oauth2.googleapis.com/token",
+}
 
 // New creates a Google OAuth provider that implements oauth.Provider.
 func New(opts ...ConfigOption) oauth.Provider {
@@ -44,7 +48,7 @@ func newGoogleProvider(cfg *config) *googleProvider {
 		ClientSecret: cfg.clientSecret,
 		RedirectURL:  cfg.redirectURL,
 		Scopes:       scopes,
-		Endpoint:     google.Endpoint,
+		Endpoint:     googleEndpoint,
 	}
 	return &googleProvider{oauthConfig: config, config: cfg}
 }
@@ -62,12 +66,19 @@ func (g *googleProvider) OAuth2Config() (*oauth2.Config, []oauth2.AuthCodeOption
 	return g.oauthConfig, authOpts
 }
 
+func (g *googleProvider) IDTokenNonceEnabled() bool {
+	return true
+}
+
 func (g *googleProvider) GetUserInfo(ctx context.Context, token *oauth.TokenResponse) (*oauth.ProviderUserInfo, error) {
 	if token.IDToken == "" {
 		return nil, errors.New("google: id_token required; include openid scope")
 	}
 	claims, err := g.config.verifyIDToken(ctx, token.IDToken)
 	if err != nil {
+		return nil, fmt.Errorf("google: %w", err)
+	}
+	if err := oauth.VerifyIDTokenNonce(claims, oauth.IDTokenNonce(ctx)); err != nil {
 		return nil, fmt.Errorf("google: %w", err)
 	}
 

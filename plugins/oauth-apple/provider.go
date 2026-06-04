@@ -15,8 +15,9 @@ import (
 )
 
 var appleEndpoint = oauth2.Endpoint{
-	AuthURL:  "https://appleid.apple.com/auth/authorize",
-	TokenURL: "https://appleid.apple.com/auth/token",
+	AuthURL:   "https://appleid.apple.com/auth/authorize",
+	TokenURL:  "https://appleid.apple.com/auth/token",
+	AuthStyle: oauth2.AuthStyleInParams,
 }
 
 // New creates an Apple OAuth provider that implements oauth.Provider.
@@ -63,6 +64,10 @@ func (a *appleProvider) OAuth2Config() (*oauth2.Config, []oauth2.AuthCodeOption)
 	return a.oauthConfig, authOpts
 }
 
+func (a *appleProvider) IDTokenNonceEnabled() bool {
+	return true
+}
+
 // ResponseMode returns form_post because Apple delivers the authorization
 // response (including the first-login user payload) as a POST body.
 func (a *appleProvider) ResponseMode() oauth.ResponseMode {
@@ -75,6 +80,9 @@ func (a *appleProvider) GetUserInfo(ctx context.Context, token *oauth.TokenRespo
 	}
 	claims, err := a.config.verifyIDToken(ctx, token.IDToken)
 	if err != nil {
+		return nil, fmt.Errorf("apple: %w", err)
+	}
+	if err := oauth.VerifyIDTokenNonce(claims, oauth.IDTokenNonce(ctx)); err != nil {
 		return nil, fmt.Errorf("apple: %w", err)
 	}
 

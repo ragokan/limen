@@ -35,11 +35,14 @@ func (o *oauthPlugin) constructProviderRedirectURL(provider Provider, config *oa
 	return o.core.GetBaseURLWithPluginPath(limen.PluginOAuth, fmt.Sprintf("%s/callback", provider.Name()))
 }
 
-func (o *oauthPlugin) buildAuthorizationURL(ctx context.Context, provider Provider, stateToken, verifier string) (string, error) {
+func (o *oauthPlugin) buildAuthorizationURL(ctx context.Context, provider Provider, stateToken, verifier, nonce string) (string, error) {
 	if pkce, ok := provider.(PKCEEnabledProvider); ok && !pkce.PKCEEnabled() {
 		verifier = ""
 	}
 	config, authOpts := o.getProviderConfig(provider)
+	if nonce != "" {
+		authOpts = append(authOpts, oauth2.SetAuthURLParam("nonce", nonce))
+	}
 	if builder, ok := provider.(AuthorizationURLBuilder); ok {
 		return builder.BuildAuthorizationURL(ctx, stateToken, verifier, config.RedirectURL)
 	}
@@ -94,6 +97,10 @@ func (o *oauthPlugin) GetAuthorizationURL(ctx context.Context, providerName stri
 	}
 
 	verifier := generateCodeVerifier()
+	nonce := ""
+	if p, ok := provider.(IDTokenNonceProvider); ok && p.IDTokenNonceEnabled() {
+		nonce = generateRandomString()
+	}
 
 	data := map[string]any{
 		pkceDataKey:         verifier,
@@ -101,13 +108,16 @@ func (o *oauthPlugin) GetAuthorizationURL(ctx context.Context, providerName stri
 		redirectURIKey:      redirectURI,
 		errorRedirectURIKey: errorRedirectURI,
 	}
+	if nonce != "" {
+		data[nonceDataKey] = nonce
+	}
 
 	stateToken, cookieValue, err := o.stateStore.Generate(ctx, data)
 	if err != nil {
 		return "", "", err
 	}
 
-	url, err := o.buildAuthorizationURL(ctx, provider, stateToken, verifier)
+	url, err := o.buildAuthorizationURL(ctx, provider, stateToken, verifier, nonce)
 	if err != nil {
 		return "", "", err
 	}
@@ -186,6 +196,9 @@ func (o *oauthPlugin) HandleOAuthCallback(ctx context.Context, providerName, cod
 
 	if callbackErr != nil {
 		return nil, stateData, callbackErr.ToLimenError()
+	}
+	if nonce, _ := stateData[nonceDataKey].(string); nonce != "" {
+		ctx = ContextWithIDTokenNonce(ctx, nonce)
 	}
 
 	if code == "" {
