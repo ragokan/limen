@@ -114,17 +114,13 @@ root, adapter, plugin, CLI, and example modules resolve to the current branch.
 Run all non-example module tests:
 
 ```bash
-for dir in $(find . -name go.mod -not -path './examples/*' -exec dirname {} \; | sort); do
-  (cd "$dir" && go test -count=1 ./...)
-done
+./scripts/test-modules.sh
 ```
 
-Compile examples:
+Run every module outside `go.work`, including examples:
 
 ```bash
-for dir in $(find examples -name go.mod -exec dirname {} \; | sort); do
-  (cd "$dir" && go test -run '^$' ./...)
-done
+./scripts/test-standalone-modules.sh --all
 ```
 
 Run benchmark suites and PostgreSQL 18 integration tests:
@@ -147,6 +143,11 @@ auth, err := limen.New(&limen.Config{
 ```go
 err := auth.CleanupExpired(ctx)
 ```
+
+Provider behavior, verified-email rules, and Instagram support status are
+documented in [OAuth Providers](docs/oauth-providers.md). PostgreSQL TTL and
+cleanup details are documented in [PostgreSQL Cleanup And TTL](docs/postgres-cleanup.md).
+Release/versioning rules are documented in [Releasing](docs/releasing.md).
 
 ## Contributing
 

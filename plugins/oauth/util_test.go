@@ -1,7 +1,9 @@
 package oauth
 
 import (
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"net/url"
 	"testing"
@@ -98,6 +100,43 @@ func TestBuildAuthCodeURL(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestVerifyIDTokenNonce(t *testing.T) {
+	t.Parallel()
+
+	nonce := "nonce-value"
+	sum := sha256.Sum256([]byte(nonce))
+
+	tests := []struct {
+		name    string
+		claims  map[string]any
+		wantErr bool
+	}{
+		{name: "raw nonce", claims: map[string]any{"nonce": nonce}},
+		{name: "sha256 nonce", claims: map[string]any{"nonce": hex.EncodeToString(sum[:])}},
+		{name: "missing claim", claims: map[string]any{}, wantErr: true},
+		{name: "mismatch", claims: map[string]any{"nonce": "other"}, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			err := VerifyIDTokenNonce(tt.claims, nonce)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestVerifyIDTokenNonce_RequiresExpectedNonce(t *testing.T) {
+	t.Parallel()
+
+	err := VerifyIDTokenNonce(map[string]any{"nonce": "nonce-value"}, "")
+	assert.Error(t, err)
 }
 
 // buildTestJWT creates a fake JWT with the given claims payload.

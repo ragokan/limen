@@ -124,6 +124,9 @@ func TestPostgres18CleanupExpiredIntegration(t *testing.T) {
 	assertPostgresCount(t, ctx, db, "sessions", 1)
 	assertPostgresCount(t, ctx, db, "verifications", 1)
 	assertPostgresCount(t, ctx, db, "rate_limits", 1)
+	assertPostgresValue(t, ctx, db, "sessions", "token", "active-session")
+	assertPostgresValue(t, ctx, db, "verifications", "subject", "active-verification")
+	assertPostgresValue(t, ctx, db, "rate_limits", "key", "active-rate-limit")
 }
 
 func resetCleanupTables(t *testing.T, ctx context.Context, db *sql.DB) {
@@ -172,6 +175,18 @@ func assertPostgresCount(t *testing.T, ctx context.Context, db *sql.DB, table st
 	}
 	if count != want {
 		t.Fatalf("%s count = %d, want %d", table, count, want)
+	}
+}
+
+func assertPostgresValue(t *testing.T, ctx context.Context, db *sql.DB, table, column, want string) {
+	t.Helper()
+	var got string
+	query := fmt.Sprintf(`SELECT "%s" FROM "%s" LIMIT 1`, column, table)
+	if err := db.QueryRowContext(ctx, query).Scan(&got); err != nil {
+		t.Fatalf("select %s.%s: %v", table, column, err)
+	}
+	if got != want {
+		t.Fatalf("%s.%s = %q, want %q", table, column, got, want)
 	}
 }
 

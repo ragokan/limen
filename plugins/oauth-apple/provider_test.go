@@ -48,10 +48,21 @@ func TestGetUserInfo_UsesIDTokenVerifier(t *testing.T) {
 func TestOAuth2Config_UsesAppleClientSecretPost(t *testing.T) {
 	t.Parallel()
 
-	provider := New()
+	provider := New(WithScopes())
 	cfg, _ := provider.OAuth2Config()
+	if cfg.Endpoint.AuthURL != "https://appleid.apple.com/auth/authorize" {
+		t.Fatalf("AuthURL = %q", cfg.Endpoint.AuthURL)
+	}
+	if cfg.Endpoint.TokenURL != "https://appleid.apple.com/auth/token" {
+		t.Fatalf("TokenURL = %q", cfg.Endpoint.TokenURL)
+	}
 	if cfg.Endpoint.AuthStyle != oauth2.AuthStyleInParams {
 		t.Fatalf("AuthStyle = %v", cfg.Endpoint.AuthStyle)
+	}
+	assertScopes(t, cfg.Scopes, "name", "email")
+	rm, ok := provider.(oauth.ResponseModeProvider)
+	if !ok || rm.ResponseMode() != oauth.ResponseModeFormPost {
+		t.Fatal("ResponseMode must be form_post")
 	}
 }
 
@@ -88,6 +99,95 @@ func TestExtractNameFromParams(t *testing.T) {
 	name := extractNameFromParams(mapValues("user", `{"name":{"firstName":"Test","lastName":"User"}}`))
 	if name != "Test User" {
 		t.Fatalf("name = %q", name)
+	}
+}
+
+func TestGetUserInfo_RequiresIDToken(t *testing.T) {
+	t.Parallel()
+
+	_, err := New(WithClientID("client-id")).GetUserInfo(context.Background(), &oauth.TokenResponse{})
+	if err == nil {
+		t.Fatal("expected missing id_token error")
+	}
+}
+
+func TestGetUserInfo_RejectsMissingSub(t *testing.T) {
+	t.Parallel()
+
+	provider := New(
+		WithClientID("client-id"),
+		WithIDTokenVerifier(func(_ context.Context, _ string) (map[string]any, error) {
+			return map[string]any{
+				"email":          "user@example.com",
+				"email_verified": "true",
+				"nonce":          "nonce",
+			}, nil
+		}),
+	)
+
+	ctx := oauth.ContextWithIDTokenNonce(context.Background(), "nonce")
+	_, err := provider.GetUserInfo(ctx, &oauth.TokenResponse{IDToken: "id-token"})
+	if err == nil {
+		t.Fatal("expected missing sub error")
+	}
+}
+
+func TestGetUserInfo_RejectsMissingEmail(t *testing.T) {
+	t.Parallel()
+
+	provider := New(
+		WithClientID("client-id"),
+		WithIDTokenVerifier(func(_ context.Context, _ string) (map[string]any, error) {
+			return map[string]any{
+				"sub":   "apple-user-1",
+				"nonce": "nonce",
+			}, nil
+		}),
+	)
+
+	ctx := oauth.ContextWithIDTokenNonce(context.Background(), "nonce")
+	_, err := provider.GetUserInfo(ctx, &oauth.TokenResponse{IDToken: "id-token"})
+	if err == nil {
+		t.Fatal("expected missing email error")
+	}
+}
+
+func TestGetUserInfo_MapsFalseEmailVerifiedClaims(t *testing.T) {
+	t.Parallel()
+
+	for _, raw := range []any{"false", false} {
+		provider := New(
+			WithClientID("client-id"),
+			WithIDTokenVerifier(func(_ context.Context, _ string) (map[string]any, error) {
+				return map[string]any{
+					"sub":            "apple-user-1",
+					"email":          "user@example.com",
+					"email_verified": raw,
+					"nonce":          "nonce",
+				}, nil
+			}),
+		)
+
+		ctx := oauth.ContextWithIDTokenNonce(context.Background(), "nonce")
+		info, err := provider.GetUserInfo(ctx, &oauth.TokenResponse{IDToken: "id-token"})
+		if err != nil {
+			t.Fatalf("GetUserInfo: %v", err)
+		}
+		if info.EmailVerified {
+			t.Fatalf("expected unverified email for %v: %#v", raw, info)
+		}
+	}
+}
+
+func assertScopes(t *testing.T, got []string, want ...string) {
+	t.Helper()
+	if len(got) != len(want) {
+		t.Fatalf("Scopes = %#v, want %#v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("Scopes = %#v, want %#v", got, want)
+		}
 	}
 }
 

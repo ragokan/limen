@@ -11,6 +11,11 @@ func (r *RateLimitSchema) Introspect(config *SchemaConfig) SchemaIntrospector {
 				Columns: []SchemaField{RateLimitSchemaKeyField},
 				Unique:  true,
 			},
+			{
+				Name:    "idx_rate_limits_last_request_at",
+				Columns: []SchemaField{RateLimitSchemaLastRequestAtField},
+				Unique:  false,
+			},
 		},
 		SchemaName: CoreSchemaRateLimits,
 		Schema:     r,

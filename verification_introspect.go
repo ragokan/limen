@@ -17,6 +17,11 @@ func (v *VerificationSchema) Introspect(config *SchemaConfig) SchemaIntrospector
 				Columns: []SchemaField{VerificationSchemaSubjectField},
 				Unique:  false,
 			},
+			{
+				Name:    "idx_verifications_expires_at",
+				Columns: []SchemaField{VerificationSchemaExpiresAtField},
+				Unique:  false,
+			},
 		},
 		SchemaName: CoreSchemaVerifications,
 		Schema:     v,

@@ -1,0 +1,71 @@
+# Benchmark sql
+Thu Jun  4 17:00:31 +03 2026
+go version go1.26.4 darwin/arm64
+d829bb4
+ M .github/workflows/ci.yml
+ M README.md
+ M SECURITY.md
+ M adapters/gorm/adapter_benchmark_test.go
+ M adapters/gorm/go.sum
+ M adapters/gorm/postgres_integration_test.go
+ M adapters/sql/adapter_benchmark_test.go
+ M adapters/sql/go.sum
+ M adapters/sql/postgres_integration_test.go
+ M benchmarks/README.md
+ M benchmarks/docker-compose.yml
+ M cleanup_test.go
+ M cmd/limen/go.sum
+ M examples/README.md
+ M plugins/oauth-apple/provider.go
+ M plugins/oauth-apple/provider_test.go
+ M plugins/oauth-discord/provider.go
+ M plugins/oauth-facebook/provider_test.go
+ M plugins/oauth-generic/provider_test.go
+ M plugins/oauth-google/provider_test.go
+ M plugins/oauth-linkedin/provider.go
+ M plugins/oauth-linkedin/provider_test.go
+ M plugins/oauth-spotify/provider_test.go
+ M plugins/oauth-twitter/provider.go
+ M plugins/oauth/authentication.go
+ M plugins/oauth/authentication_test.go
+ M plugins/oauth/constants.go
+ M plugins/oauth/errors.go
+ M plugins/oauth/handlers_test.go
+ M plugins/oauth/id_token_test.go
+ M plugins/oauth/util_test.go
+ M rate_limit_introspect.go
+ M scripts/run-benchmarks.sh
+ M scripts/test-postgres18.sh
+ M session_introspect.go
+ M verification_introspect.go
+?? .github/workflows/benchmarks.yml
+?? .github/workflows/release.yml
+?? VERSION
+?? benchmarks/results/next-steps-manifest.txt
+?? benchmarks/results/next-steps-root.txt
+?? benchmarks/results/next-steps-sql.txt
+?? cmd/limen/migration_generator_test.go
+?? docs/
+?? plugins/oauth-consentkeys/provider_test.go
+?? plugins/oauth-discord/provider_test.go
+?? plugins/oauth-twitter/provider_test.go
+?? schema_indexes_test.go
+?? scripts/check-internal-module-versions.sh
+?? scripts/ci-benchmarks.sh
+?? scripts/list-modules.sh
+?? scripts/release-modules.sh
+?? scripts/test-modules.sh
+?? scripts/test-standalone-modules.sh
+
+goos: darwin
+goarch: arm64
+pkg: github.com/ragokan/limen/adapters/sql
+cpu: Apple M4 Pro
+BenchmarkSQLAdapterFindOne-14      	  107094	      9414 ns/op	    1408 B/op	      41 allocs/op
+BenchmarkSQLAdapterFindMany-14     	   19822	     60337 ns/op	   62728 B/op	    1722 allocs/op
+BenchmarkSQLAdapterCreate-14       	  144794	      8320 ns/op	    1457 B/op	      41 allocs/op
+BenchmarkSQLPostgresFindOne-14     	   16332	     70948 ns/op	    2064 B/op	      41 allocs/op
+BenchmarkSQLPostgresFindMany-14    	   10000	    107716 ns/op	   56176 B/op	    1129 allocs/op
+BenchmarkSQLPostgresCreate-14      	    2398	   1173777 ns/op	    1637 B/op	      39 allocs/op
+PASS
+ok  	github.com/ragokan/limen/adapters/sql	9.155s

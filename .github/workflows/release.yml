@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, for example v0.1.5"
+        required: true
+      dry_run:
+        description: "Validate without creating or pushing tags"
+        default: "true"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Release modules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - name: Release
+        env:
+          DRY_RUN_INPUT: ${{ inputs.dry_run }}
+        run: |
+          if [ "$DRY_RUN_INPUT" = "true" ]; then
+            export DRY_RUN=1
+            export PUSH=0
+          else
+            export DRY_RUN=0
+            export PUSH=1
+          fi
+          ./scripts/release-modules.sh "${{ inputs.version }}"

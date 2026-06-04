@@ -6,6 +6,20 @@ out_dir="${BENCH_OUT_DIR:-benchmarks/results}"
 name="${BENCH_NAME:-micro-optimizations}"
 mkdir -p "$out_dir"
 
+manifest="$out_dir/${name}-manifest.txt"
+{
+	echo "# Benchmark manifest"
+	date
+	go version
+	git rev-parse --short HEAD
+	git status --short
+	uname -a
+	if [ "${LIMEN_POSTGRES_DSN:-}" != "" ]; then
+		echo "LIMEN_POSTGRES_DSN=${LIMEN_POSTGRES_DSN}"
+		docker compose -f benchmarks/docker-compose.yml exec -T postgres postgres --version
+	fi
+} | tee "$manifest"
+
 run_one() {
 	dir="$1"
 	label="$2"

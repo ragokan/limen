@@ -39,6 +39,10 @@ type appleProvider struct {
 }
 
 func newAppleProvider(cfg *config) *appleProvider {
+	scopes := cfg.scopes
+	if len(scopes) == 0 {
+		scopes = []string{"name", "email"}
+	}
 	if cfg.verifyIDToken == nil {
 		cfg.verifyIDToken = oauth.NewIDTokenVerifier("https://appleid.apple.com", cfg.clientID)
 	}
@@ -46,7 +50,7 @@ func newAppleProvider(cfg *config) *appleProvider {
 		ClientID:     cfg.clientID,
 		ClientSecret: cfg.clientSecret,
 		RedirectURL:  cfg.redirectURL,
-		Scopes:       cfg.scopes,
+		Scopes:       scopes,
 		Endpoint:     appleEndpoint,
 	}
 	return &appleProvider{oauthConfig: oauthCfg, config: cfg}

@@ -49,7 +49,61 @@ func TestVerifyIDTokenClaims_RejectsExpiredToken(t *testing.T) {
 	}
 }
 
+func TestVerifyIDTokenClaims_RejectsWrongIssuer(t *testing.T) {
+	t.Parallel()
+
+	issuer, token := newTestOIDCProviderAndTokenWithOptions(t, testOIDCTokenOptions{
+		audience:  "client-id",
+		expiresAt: time.Now().Add(time.Hour),
+		issuer:    "https://issuer.example.invalid",
+	})
+
+	_, err := VerifyIDTokenClaims(t.Context(), issuer, "client-id", token)
+	if err == nil {
+		t.Fatal("expected wrong issuer to be rejected")
+	}
+}
+
+func TestVerifyIDTokenClaims_RejectsUnknownKeyID(t *testing.T) {
+	t.Parallel()
+
+	issuer, token := newTestOIDCProviderAndTokenWithOptions(t, testOIDCTokenOptions{
+		audience:  "client-id",
+		expiresAt: time.Now().Add(time.Hour),
+		keyID:     "unknown-key",
+	})
+
+	_, err := VerifyIDTokenClaims(t.Context(), issuer, "client-id", token)
+	if err == nil {
+		t.Fatal("expected unknown key id to be rejected")
+	}
+}
+
+func TestVerifyIDTokenClaims_RejectsMalformedJWT(t *testing.T) {
+	t.Parallel()
+
+	issuer, _ := newTestOIDCProviderAndToken(t, "client-id", time.Now().Add(time.Hour))
+	_, err := VerifyIDTokenClaims(t.Context(), issuer, "client-id", "not-a-jwt")
+	if err == nil {
+		t.Fatal("expected malformed JWT to be rejected")
+	}
+}
+
+type testOIDCTokenOptions struct {
+	audience  string
+	expiresAt time.Time
+	issuer    string
+	keyID     string
+}
+
 func newTestOIDCProviderAndToken(t *testing.T, audience string, expiresAt time.Time) (string, string) {
+	return newTestOIDCProviderAndTokenWithOptions(t, testOIDCTokenOptions{
+		audience:  audience,
+		expiresAt: expiresAt,
+	})
+}
+
+func newTestOIDCProviderAndTokenWithOptions(t *testing.T, opts testOIDCTokenOptions) (string, string) {
 	t.Helper()
 
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
@@ -83,9 +137,18 @@ func newTestOIDCProviderAndToken(t *testing.T, audience string, expiresAt time.T
 	}))
 	t.Cleanup(server.Close)
 
+	keyID := opts.keyID
+	if keyID == "" {
+		keyID = "test-key"
+	}
+	issuer := opts.issuer
+	if issuer == "" {
+		issuer = server.URL
+	}
+
 	signer, err := gojose.NewSigner(
 		gojose.SigningKey{Algorithm: gojose.RS256, Key: privateKey},
-		(&gojose.SignerOptions{}).WithHeader("kid", "test-key").WithType("JWT"),
+		(&gojose.SignerOptions{}).WithHeader("kid", keyID).WithType("JWT"),
 	)
 	if err != nil {
 		t.Fatalf("new signer: %v", err)
@@ -93,10 +156,10 @@ func newTestOIDCProviderAndToken(t *testing.T, audience string, expiresAt time.T
 
 	token, err := jwt.Signed(signer).
 		Claims(jwt.Claims{
-			Issuer:   server.URL,
+			Issuer:   issuer,
 			Subject:  "user-1",
-			Audience: jwt.Audience{audience},
-			Expiry:   jwt.NewNumericDate(expiresAt),
+			Audience: jwt.Audience{opts.audience},
+			Expiry:   jwt.NewNumericDate(opts.expiresAt),
 			IssuedAt: jwt.NewNumericDate(time.Now()),
 		}).
 		Claims(map[string]any{

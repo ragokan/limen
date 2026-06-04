@@ -39,11 +39,15 @@ type twitterProvider struct {
 }
 
 func newTwitterProvider(cfg *config) *twitterProvider {
+	scopes := cfg.scopes
+	if len(scopes) == 0 {
+		scopes = []string{"users.read", "users.email", "tweet.read", "offline.access"}
+	}
 	config := &oauth2.Config{
 		ClientID:     cfg.clientID,
 		ClientSecret: cfg.clientSecret,
 		RedirectURL:  cfg.redirectURL,
-		Scopes:       cfg.scopes,
+		Scopes:       scopes,
 		Endpoint:     twitterEndpoint,
 	}
 	return &twitterProvider{oauthConfig: config, config: cfg, httpClient: &http.Client{Timeout: 10 * time.Second}}

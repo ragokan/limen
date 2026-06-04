@@ -100,6 +100,7 @@ func (o *oauthPlugin) GetAuthorizationURL(ctx context.Context, providerName stri
 	}
 
 	data := map[string]any{
+		providerDataKey:     providerName,
 		pkceDataKey:         verifier,
 		additionalDataKey:   request.AdditionalData,
 		redirectURIKey:      redirectURI,
@@ -185,6 +186,9 @@ func (o *oauthPlugin) HandleOAuthCallback(ctx context.Context, providerName, cod
 	stateData, err := o.resolveStateData(ctx, state, cookieNonce)
 	if err != nil {
 		return nil, nil, err
+	}
+	if expectedProvider, _ := stateData[providerDataKey].(string); expectedProvider != providerName {
+		return nil, stateData, ErrOAuthProviderMismatch
 	}
 
 	if callbackErr != nil {

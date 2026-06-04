@@ -210,12 +210,54 @@ func TestExchangeAuthorizationCodeForTokens(t *testing.T) {
 func TestHandleOAuthCallback(t *testing.T) {
 	t.Parallel()
 
+	t.Run("rejects provider mismatch", func(t *testing.T) {
+		t.Parallel()
+
+		for _, tt := range []struct {
+			name string
+			opts []ConfigOption
+		}{
+			{name: "stateless"},
+			{name: "database", opts: []ConfigOption{WithDatabaseState()}},
+		} {
+			t.Run(tt.name, func(t *testing.T) {
+				t.Parallel()
+
+				providers := []Provider{
+					&testProvider{name: "test"},
+					&testProvider{name: "other"},
+				}
+				opts := append([]ConfigOption{WithProviders(providers...)}, tt.opts...)
+				l, plugin := newTestOAuthPlugin(t, opts...)
+				_ = l.Handler()
+
+				authURL, cookieValue, err := plugin.GetAuthorizationURL(context.Background(), "test", &OAuthAuthorizeURLData{})
+				require.NoError(t, err)
+				parsed, parseErr := url.Parse(authURL)
+				require.NoError(t, parseErr)
+
+				profile, stateData, callbackErr := plugin.HandleOAuthCallback(
+					context.Background(),
+					"other",
+					"auth-code",
+					parsed.Query().Get("state"),
+					cookieValue,
+					nil,
+				)
+				assert.Nil(t, profile)
+				require.Error(t, callbackErr)
+				assert.ErrorIs(t, callbackErr, ErrOAuthProviderMismatch)
+				assert.Equal(t, "test", stateData[providerDataKey])
+			})
+		}
+	})
+
 	t.Run("callback error preserves state data", func(t *testing.T) {
 		t.Parallel()
 
 		_, plugin := newTestOAuthPlugin(t)
 		ctx := context.Background()
-		seedData := map[string]any{"source": "oauth-test"}
+		seedData := map[string]any{providerDataKey: "test", "source": "oauth-test"}
 		stateToken, cookieNonce, err := plugin.stateStore.Generate(ctx, seedData)
 		require.NoError(t, err)
 
@@ -236,7 +278,10 @@ func TestHandleOAuthCallback(t *testing.T) {
 
 		_, plugin := newTestOAuthPlugin(t)
 		ctx := context.Background()
-		stateToken, cookieNonce, err := plugin.stateStore.Generate(ctx, map[string]any{"source": "missing-code"})
+		stateToken, cookieNonce, err := plugin.stateStore.Generate(ctx, map[string]any{
+			providerDataKey: "test",
+			"source":        "missing-code",
+		})
 		require.NoError(t, err)
 
 		profile, stateData, callbackErr := plugin.HandleOAuthCallback(ctx, "test", "", stateToken, cookieNonce, nil)

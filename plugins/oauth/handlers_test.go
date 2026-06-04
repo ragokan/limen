@@ -1,6 +1,8 @@
 package oauth
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -12,6 +14,76 @@ import (
 
 	"github.com/ragokan/limen"
 )
+
+func TestHandleCallbackResponseRedirects(t *testing.T) {
+	t.Parallel()
+
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/oauth/test/callback", nil)
+
+	t.Run("success redirect", func(t *testing.T) {
+		t.Parallel()
+
+		handlers := newOAuthHandlersForTest(t)
+		rec := httptest.NewRecorder()
+
+		handlers.handleCallbackResponse(rec, req, map[string]any{
+			redirectURIKey: "http://localhost:8080/success",
+		}, nil, nil, nil)
+
+		assert.Equal(t, http.StatusSeeOther, rec.Code)
+		assert.Equal(t, "http://localhost:8080/success", rec.Header().Get("Location"))
+	})
+
+	t.Run("error redirect uses error_redirect_uri", func(t *testing.T) {
+		t.Parallel()
+
+		handlers := newOAuthHandlersForTest(t)
+		rec := httptest.NewRecorder()
+
+		handlers.handleCallbackResponse(rec, req, map[string]any{
+			redirectURIKey:      "http://localhost:8080/success",
+			errorRedirectURIKey: "http://localhost:8080/error",
+		}, nil, nil, errors.New("bad callback"))
+
+		assert.Equal(t, http.StatusSeeOther, rec.Code)
+		location := rec.Header().Get("Location")
+		assert.True(t, strings.HasPrefix(location, "http://localhost:8080/error?"))
+		assert.Contains(t, location, "error=bad+callback")
+	})
+
+	t.Run("nil state returns json error", func(t *testing.T) {
+		t.Parallel()
+
+		handlers := newOAuthHandlersForTest(t)
+		rec := httptest.NewRecorder()
+
+		handlers.handleCallbackResponse(rec, req, nil, nil, nil, ErrOAuthStateInvalid)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Empty(t, rec.Header().Get("Location"))
+		assert.Contains(t, rec.Body.String(), "invalid or expired OAuth state")
+	})
+}
+
+func TestHandleCallbackResponseDisableRedirect(t *testing.T) {
+	t.Parallel()
+
+	l, plugin := newTestOAuthPlugin(t, WithDisableRedirect())
+	_ = l.Handler()
+	user := seedOAuthUser(t, l, "redirect-disabled@example.com")
+	handlers := newOAuthHandlers(plugin, plugin.httpCore)
+
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/oauth/test/callback", nil)
+	rec := httptest.NewRecorder()
+
+	handlers.handleCallbackResponse(rec, req, map[string]any{
+		redirectURIKey: "http://localhost:8080/success",
+	}, &limen.AuthenticationResult{User: user}, nil, nil)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Empty(t, rec.Header().Get("Location"))
+	assert.Contains(t, rec.Body.String(), "redirect-disabled@example.com")
+}
 
 func TestFormPostCallback(t *testing.T) {
 	t.Parallel()

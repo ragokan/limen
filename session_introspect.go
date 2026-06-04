@@ -15,6 +15,16 @@ func (s *SessionSchema) Introspect(config *SchemaConfig) SchemaIntrospector {
 				Columns: []SchemaField{SessionSchemaUserIDField},
 				Unique:  false,
 			},
+			{
+				Name:    "idx_sessions_expires_at",
+				Columns: []SchemaField{SessionSchemaExpiresAtField},
+				Unique:  false,
+			},
+			{
+				Name:    "idx_sessions_user_id_expires_at",
+				Columns: []SchemaField{SessionSchemaUserIDField, SessionSchemaExpiresAtField},
+				Unique:  false,
+			},
 		},
 		ForeignKeys: []ForeignKeyDefinition{
 			{

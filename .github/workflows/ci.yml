@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 permissions:
   contents: read
@@ -21,11 +21,36 @@ jobs:
           go-version: "1.25"
 
       - name: Run tests
-        run: |
-          for dir in $(find . -name go.mod -not -path './examples/*' -exec dirname {} \;); do
-            echo "=== testing $dir ==="
-            (cd "$dir" && go test -race -count=1 ./...)
-          done
+        run: ./scripts/test-modules.sh --race
+
+      - name: Check internal module versions
+        run: ./scripts/check-internal-module-versions.sh
+
+  standalone:
+    name: Standalone modules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - name: Test modules outside go.work
+        run: ./scripts/test-standalone-modules.sh --all --local-replace
+
+  postgres:
+    name: PostgreSQL 18
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - name: Run PostgreSQL integration tests
+        run: ./scripts/test-postgres18.sh
 
   lint:
     name: Lint

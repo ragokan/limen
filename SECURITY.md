@@ -55,6 +55,8 @@ Provider email verification is treated conservatively. OAuth sign-in can create
 or use an already-linked provider account even when the provider does not expose
 a trusted email-verification signal, but implicit email-based linking to an
 existing local user requires a verified provider email.
+The OAuth state also records the expected provider, and callbacks fail when the
+route provider does not match the provider that created the state.
 
 Magic-link request metadata is stored as magic-link state only by default. It is
 not persisted to newly-created user records unless the application explicitly

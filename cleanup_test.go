@@ -2,6 +2,9 @@ package limen
 
 import (
 	"context"
+	"errors"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -96,6 +99,36 @@ func TestListSessionsReturnsOnlyActiveSessions(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, sessions, 1)
 	assert.Equal(t, "active", sessions[0].Token)
+}
+
+func TestValidateSessionDeletesExpiredSession(t *testing.T) {
+	t.Parallel()
+
+	l := newCleanupTestLimen(t, newTestMemoryAdapter(t), NewDefaultCleanupConfig(WithCleanupOnInit(false)))
+	ctx := context.Background()
+	now := time.Now()
+	require.NoError(t, l.core.Create(ctx, l.core.Schema.User, &User{
+		Email: "session-expired@example.com",
+	}, nil))
+	user, err := l.core.DBAction.FindUserByEmail(ctx, "session-expired@example.com")
+	require.NoError(t, err)
+	require.NoError(t, l.core.Create(ctx, l.core.Schema.Session, &Session{
+		Token:      "expired-token",
+		UserID:     user.ID,
+		CreatedAt:  now.Add(-2 * time.Hour),
+		ExpiresAt:  now.Add(-time.Hour),
+		LastAccess: now.Add(-time.Hour),
+	}, nil))
+
+	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/", http.NoBody)
+	req.AddCookie(&http.Cookie{Name: "limen_session", Value: "expired-token"})
+
+	_, err = l.GetSession(req)
+	require.True(t, errors.Is(err, ErrSessionExpired), "err = %v", err)
+
+	count, err := l.core.Count(ctx, l.core.Schema.Session, nil)
+	require.NoError(t, err)
+	assert.Equal(t, int64(0), count)
 }
 
 func seedCleanupRows(t *testing.T, l *Limen, now time.Time) {

@@ -1,0 +1,59 @@
+# Benchmark manifest
+Thu Jun  4 17:00:18 +03 2026
+go version go1.26.4 darwin/arm64
+d829bb4
+ M .github/workflows/ci.yml
+ M README.md
+ M SECURITY.md
+ M adapters/gorm/adapter_benchmark_test.go
+ M adapters/gorm/go.sum
+ M adapters/gorm/postgres_integration_test.go
+ M adapters/sql/adapter_benchmark_test.go
+ M adapters/sql/go.sum
+ M adapters/sql/postgres_integration_test.go
+ M benchmarks/README.md
+ M benchmarks/docker-compose.yml
+ M cleanup_test.go
+ M cmd/limen/go.sum
+ M examples/README.md
+ M plugins/oauth-apple/provider.go
+ M plugins/oauth-apple/provider_test.go
+ M plugins/oauth-discord/provider.go
+ M plugins/oauth-facebook/provider_test.go
+ M plugins/oauth-generic/provider_test.go
+ M plugins/oauth-google/provider_test.go
+ M plugins/oauth-linkedin/provider.go
+ M plugins/oauth-linkedin/provider_test.go
+ M plugins/oauth-spotify/provider_test.go
+ M plugins/oauth-twitter/provider.go
+ M plugins/oauth/authentication.go
+ M plugins/oauth/authentication_test.go
+ M plugins/oauth/constants.go
+ M plugins/oauth/errors.go
+ M plugins/oauth/handlers_test.go
+ M plugins/oauth/id_token_test.go
+ M plugins/oauth/util_test.go
+ M rate_limit_introspect.go
+ M scripts/run-benchmarks.sh
+ M scripts/test-postgres18.sh
+ M session_introspect.go
+ M verification_introspect.go
+?? .github/workflows/benchmarks.yml
+?? .github/workflows/release.yml
+?? VERSION
+?? benchmarks/results/next-steps-manifest.txt
+?? cmd/limen/migration_generator_test.go
+?? docs/
+?? plugins/oauth-consentkeys/provider_test.go
+?? plugins/oauth-discord/provider_test.go
+?? plugins/oauth-twitter/provider_test.go
+?? schema_indexes_test.go
+?? scripts/check-internal-module-versions.sh
+?? scripts/ci-benchmarks.sh
+?? scripts/list-modules.sh
+?? scripts/release-modules.sh
+?? scripts/test-modules.sh
+?? scripts/test-standalone-modules.sh
+Darwin ragmini 25.5.0 Darwin Kernel Version 25.5.0: Mon Apr 27 20:41:15 PDT 2026; root:xnu-12377.121.6~2/RELEASE_ARM64_T6041 arm64
+LIMEN_POSTGRES_DSN=postgres://limen:limen@127.0.0.1:55432/limen_test?sslmode=disable
+postgres (PostgreSQL) 18.4 (Debian 18.4-1.pgdg13+1)

@@ -40,6 +40,9 @@ type discordProvider struct {
 
 func newDiscordProvider(cfg *config) *discordProvider {
 	scopes := cfg.scopes
+	if len(scopes) == 0 {
+		scopes = []string{"identify", "email"}
+	}
 	config := &oauth2.Config{
 		ClientID:     cfg.clientID,
 		ClientSecret: cfg.clientSecret,

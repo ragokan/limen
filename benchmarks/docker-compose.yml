@@ -1,15 +1,15 @@
 services:
   postgres:
-    image: ${LIMEN_POSTGRES_IMAGE:-postgres:latest}
+    image: ${LIMEN_POSTGRES_IMAGE:-postgres:18}
     pull_policy: always
     ports:
       - "55432:5432"
     environment:
       POSTGRES_USER: limen
       POSTGRES_PASSWORD: limen
-      POSTGRES_DB: limen_bench
+      POSTGRES_DB: limen_test
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U limen -d limen_bench"]
+      test: ["CMD-SHELL", "pg_isready -U limen -d limen_test"]
       interval: 1s
       timeout: 3s
       retries: 30

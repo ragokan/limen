@@ -4,6 +4,7 @@ const (
 	oauthStateAction    = "oauth_state"
 	formPostCookieName  = "limen_oauth_form_post"
 	formPostQueryKey    = "_limen_form_post"
+	providerDataKey     = "provider"
 	pkceDataKey         = "pkce_verifier"
 	nonceDataKey        = "nonce"
 	additionalDataKey   = "additional_data"

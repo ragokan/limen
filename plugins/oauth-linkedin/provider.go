@@ -39,6 +39,10 @@ type linkedInProvider struct {
 }
 
 func newLinkedInProvider(cfg *config) *linkedInProvider {
+	scopes := cfg.scopes
+	if len(scopes) == 0 {
+		scopes = []string{"openid", "profile", "email"}
+	}
 	if cfg.verifyIDToken == nil {
 		cfg.verifyIDToken = oauth.NewIDTokenVerifier(linkedinIssuer, cfg.clientID)
 	}
@@ -46,7 +50,7 @@ func newLinkedInProvider(cfg *config) *linkedInProvider {
 		ClientID:     cfg.clientID,
 		ClientSecret: cfg.clientSecret,
 		RedirectURL:  cfg.redirectURL,
-		Scopes:       cfg.scopes,
+		Scopes:       scopes,
 		Endpoint:     linkedinEndpoint,
 	}
 	return &linkedInProvider{oauthConfig: config, config: cfg}

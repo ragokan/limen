@@ -45,6 +45,64 @@ func TestGetUserInfo_EmailVerificationUnknown(t *testing.T) {
 	}
 }
 
+func TestOAuth2Config_UsesGraphV25EndpointsAndDefaultScopes(t *testing.T) {
+	t.Parallel()
+
+	provider := New(
+		WithClientID("client-id"),
+		WithClientSecret("client-secret"),
+		WithRedirectURL("https://app.example/callback"),
+		WithScopes(),
+		WithOption("auth_type", "rerequest"),
+	)
+	cfg, opts := provider.OAuth2Config()
+
+	if cfg.Endpoint.AuthURL != "https://www.facebook.com/v25.0/dialog/oauth" {
+		t.Fatalf("AuthURL = %q", cfg.Endpoint.AuthURL)
+	}
+	if cfg.Endpoint.TokenURL != "https://graph.facebook.com/v25.0/oauth/access_token" {
+		t.Fatalf("TokenURL = %q", cfg.Endpoint.TokenURL)
+	}
+	assertScopes(t, cfg.Scopes, "email", "public_profile")
+	authURL := cfg.AuthCodeURL("state", opts...)
+	if !strings.Contains(authURL, "auth_type=rerequest") {
+		t.Fatalf("auth URL missing option: %s", authURL)
+	}
+}
+
+func TestGetUserInfo_RejectsMissingID(t *testing.T) {
+	t.Parallel()
+
+	provider := New().(*facebookProvider)
+	provider.httpClient = &http.Client{Transport: roundTripFunc(func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header:     make(http.Header),
+			Body: io.NopCloser(strings.NewReader(`{
+				"name": "Test User",
+				"email": "user@example.com"
+			}`)),
+		}, nil
+	})}
+
+	_, err := provider.GetUserInfo(context.Background(), &oauth.TokenResponse{AccessToken: "access-token"})
+	if err == nil {
+		t.Fatal("expected missing id error")
+	}
+}
+
+func assertScopes(t *testing.T, got []string, want ...string) {
+	t.Helper()
+	if len(got) != len(want) {
+		t.Fatalf("Scopes = %#v, want %#v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("Scopes = %#v, want %#v", got, want)
+		}
+	}
+}
+
 type roundTripFunc func(*http.Request) (*http.Response, error)
 
 func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {

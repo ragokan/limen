@@ -13,6 +13,7 @@ var (
 	ErrProviderRequired                      = limen.NewLimenError("provider is required", http.StatusUnprocessableEntity, nil)
 	ErrCannotUnlinkOnlyAccount               = limen.NewLimenError("cannot unlink the only account", http.StatusConflict, nil)
 	ErrProviderNotFound                      = limen.NewLimenError("oauth provider not found", http.StatusNotFound, nil)
+	ErrOAuthProviderMismatch                 = limen.NewLimenError("oauth provider does not match state", http.StatusBadRequest, nil)
 	ErrPKCEVerifierNotFound                  = limen.NewLimenError("PKCE verifier not found", http.StatusBadRequest, nil)
 	ErrAccountAlreadyLinkedToAnotherUser     = limen.NewLimenError("this provider account is already linked to another user", http.StatusConflict, nil)
 	ErrAccountCannotBeLinkedToDifferentEmail = limen.NewLimenError("user cannot be linked to this provider account because the email does not match", http.StatusConflict, nil)
