@@ -263,6 +263,7 @@ func (r *router) serveRoute(w http.ResponseWriter, req *http.Request, route *rou
 		bodyBytes, _ := json.Marshal(hookCtx.modifiedData)
 		req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 		req = req.WithContext(context.WithValue(req.Context(), bodyContextKey{}, hookCtx.modifiedData))
+		updateAdditionalFieldsRequest(req)
 		hookCtx.request = req
 	}
 

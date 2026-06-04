@@ -3,10 +3,10 @@ module example/two-factor
 go 1.25.0
 
 require (
-	github.com/ragokan/limen v0.1.2
-	github.com/ragokan/limen/adapters/gorm v0.1.2
-	github.com/ragokan/limen/plugins/credential-password v0.1.2
-	github.com/ragokan/limen/plugins/two-factor v0.1.2
+	github.com/ragokan/limen v0.1.4
+	github.com/ragokan/limen/adapters/gorm v0.1.4
+	github.com/ragokan/limen/plugins/credential-password v0.1.4
+	github.com/ragokan/limen/plugins/two-factor v0.1.4
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.30.1
 )

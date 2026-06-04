@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func serveRequest(t *testing.T, router *router, method, path string) *httptest.ResponseRecorder {
@@ -359,4 +360,39 @@ func TestRouterMiddlewareWithParams(t *testing.T) {
 	assert.True(t, middlewareCalled)
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "user-123", w.Body.String())
+}
+
+func TestRouterAdditionalFieldsContextReadsParsedBody(t *testing.T) {
+	t.Parallel()
+
+	schema := NewDefaultSchemaConfig(WithSchemaUser(WithUserAdditionalFields(func(ctx *AdditionalFieldsContext) (map[string]any, error) {
+		return map[string]any{
+			string(UserSchemaFirstNameField): ctx.GetBodyValue("first_name"),
+		}, nil
+	})))
+	l, err := New(&Config{
+		BaseURL:  defaultBaseURL,
+		Database: newTestMemoryAdapter(t),
+		Secret:   testSecret,
+		Schema:   schema,
+		Cleanup:  NewDefaultCleanupConfig(WithCleanupOnInit(false)),
+	})
+	require.NoError(t, err)
+
+	router := newRouter(nil, middlewareAdditionalFieldsContext())
+	router.AddRoute(MethodPOST, "/users", func(w http.ResponseWriter, r *http.Request) {
+		err := l.core.DBAction.CreateUser(r.Context(), &User{Email: "body@test.com"}, nil)
+		require.NoError(t, err)
+		w.WriteHeader(http.StatusNoContent)
+	}, "create-user", nil)
+
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/users", strings.NewReader(`{"first_name":"Body"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusNoContent, w.Code)
+	user, err := l.core.DBAction.FindUserByEmail(t.Context(), "body@test.com")
+	require.NoError(t, err)
+	assert.Equal(t, "Body", user.Raw()[string(UserSchemaFirstNameField)])
 }

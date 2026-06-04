@@ -90,6 +90,7 @@ func parseAndStoreBody(req *http.Request, maxBodyBytes int64) (*http.Request, er
 	}
 
 	req = req.WithContext(context.WithValue(req.Context(), bodyContextKey{}, body))
+	updateAdditionalFieldsRequest(req)
 
 	// Restore body for handlers that need to read it
 	req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
