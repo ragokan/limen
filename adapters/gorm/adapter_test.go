@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 func setupTestGormDB(t *testing.T) *Adapter {

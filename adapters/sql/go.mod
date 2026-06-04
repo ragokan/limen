@@ -1,11 +1,11 @@
-module github.com/thecodearcher/limen/adapters/sql
+module github.com/ragokan/limen/adapters/sql
 
 go 1.25.0
 
 require (
 	github.com/jmoiron/sqlx v1.4.0
+	github.com/ragokan/limen v0.1.2
 	github.com/stretchr/testify v1.11.1
-	github.com/thecodearcher/limen v0.1.1
 	modernc.org/sqlite v1.46.1
 )
 
@@ -28,3 +28,5 @@ require (
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )
+
+replace github.com/ragokan/limen => ../..

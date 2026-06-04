@@ -8,9 +8,9 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/thecodearcher/limen"
-	sqladapter "github.com/thecodearcher/limen/adapters/sql"
-	credentialpassword "github.com/thecodearcher/limen/plugins/credential-password"
+	"github.com/ragokan/limen"
+	sqladapter "github.com/ragokan/limen/adapters/sql"
+	credentialpassword "github.com/ragokan/limen/plugins/credential-password"
 )
 
 func main() {

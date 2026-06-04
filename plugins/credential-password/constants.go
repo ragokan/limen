@@ -1,6 +1,6 @@
 package credentialpassword
 
-import "github.com/thecodearcher/limen"
+import "github.com/ragokan/limen"
 
 const (
 	defaultMinPasswordLength        = 4

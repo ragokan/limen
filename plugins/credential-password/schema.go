@@ -1,7 +1,7 @@
 package credentialpassword
 
 import (
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 // CredentialPasswordUserSchema extends UserSchema with username-specific functionality.

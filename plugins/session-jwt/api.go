@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 // API is the public programmatic interface for the session-jwt plugin.

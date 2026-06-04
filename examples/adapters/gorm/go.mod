@@ -3,9 +3,9 @@ module example/adapters-gorm
 go 1.25.0
 
 require (
-	github.com/thecodearcher/limen v0.0.4
-	github.com/thecodearcher/limen/adapters/gorm v0.0.1
-	github.com/thecodearcher/limen/plugins/credential-password v0.0.1
+	github.com/ragokan/limen v0.1.2
+	github.com/ragokan/limen/adapters/gorm v0.1.2
+	github.com/ragokan/limen/plugins/credential-password v0.1.2
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.30.1
 )
@@ -17,9 +17,14 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	golang.org/x/crypto v0.48.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.35.0 // indirect
 )
+
+replace github.com/ragokan/limen => ../../..
+
+replace github.com/ragokan/limen/adapters/gorm => ../../../adapters/gorm
+
+replace github.com/ragokan/limen/plugins/credential-password => ../../../plugins/credential-password

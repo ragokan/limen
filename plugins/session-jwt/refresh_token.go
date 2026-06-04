@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 // RefreshToken is the domain model stored in jwt_refresh_tokens.

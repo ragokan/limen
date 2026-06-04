@@ -1,6 +1,6 @@
 package main
 
-import "github.com/thecodearcher/limen"
+import "github.com/ragokan/limen"
 
 // cliConfig is the JSON format of .limen/schemas.json (written by the library when CLI export is enabled).
 type cliConfig struct {

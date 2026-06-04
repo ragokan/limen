@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 func newTestLimenWithPlugin(t *testing.T, opts ...ConfigOption) *credentialPasswordPlugin {

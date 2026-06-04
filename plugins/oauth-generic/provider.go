@@ -9,7 +9,7 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"github.com/thecodearcher/limen/plugins/oauth"
+	"github.com/ragokan/limen/plugins/oauth"
 )
 
 // New creates a generic OAuth provider that implements oauth.Provider.

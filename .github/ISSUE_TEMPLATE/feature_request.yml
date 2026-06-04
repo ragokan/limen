@@ -7,7 +7,7 @@ body:
       value: |
         Thanks for suggesting an improvement! For open-ended ideas or
         questions, consider starting a
-        [discussion](https://github.com/thecodearcher/limen/discussions)
+        [discussion](https://github.com/ragokan/limen/discussions)
         instead.
 
   - type: textarea

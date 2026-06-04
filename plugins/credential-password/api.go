@@ -3,7 +3,7 @@ package credentialpassword
 import (
 	"context"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 // API is the public interface for the credential-password plugin.

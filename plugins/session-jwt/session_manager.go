@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 // jwtSessionManager implements limen.SessionManager using JWTs as access

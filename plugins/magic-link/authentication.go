@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 func (p *magicLinkPlugin) RequestMagicLink(ctx context.Context, email string, opts ...*RequestMagicLinkOptions) (*MagicLinkMessage, error) {

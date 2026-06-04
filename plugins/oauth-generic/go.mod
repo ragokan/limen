@@ -1,20 +1,20 @@
-module github.com/thecodearcher/limen/plugins/oauth-generic
+module github.com/ragokan/limen/plugins/oauth-generic
 
 go 1.25.0
 
 require (
-	github.com/thecodearcher/limen/plugins/oauth v0.1.0
+	github.com/ragokan/limen/plugins/oauth v0.1.2
 	golang.org/x/oauth2 v0.36.0
 )
 
 require (
 	github.com/coreos/go-oidc/v3 v3.18.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
-	github.com/thecodearcher/limen v0.1.1 // indirect
+	github.com/ragokan/limen v0.1.2 // indirect
 	golang.org/x/crypto v0.48.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 )
 
-replace github.com/thecodearcher/limen => ../..
+replace github.com/ragokan/limen => ../..
 
-replace github.com/thecodearcher/limen/plugins/oauth => ../oauth
+replace github.com/ragokan/limen/plugins/oauth => ../oauth

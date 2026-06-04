@@ -8,7 +8,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 // Adapter implements limen.DatabaseAdapter using sqlx (extensions on database/sql).

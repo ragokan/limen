@@ -1,10 +1,10 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/thecodearcher/limen/security/advisories/new
+    url: https://github.com/ragokan/limen/security/advisories/new
     about: Please report security issues privately. See SECURITY.md for details.
   - name: Questions & discussion
-    url: https://github.com/thecodearcher/limen/discussions
+    url: https://github.com/ragokan/limen/discussions
     about: Ask usage questions, share ideas, or request feedback.
   - name: Documentation
     url: https://limenauth.dev

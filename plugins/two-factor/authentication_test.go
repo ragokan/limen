@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 func newTestPlugin(t *testing.T, revokeOthers bool) (*twoFactorPlugin, *limen.Limen) {

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 type schemaIntrospector struct {

@@ -7,7 +7,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 type mysqlDriver struct {

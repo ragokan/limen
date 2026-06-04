@@ -3,7 +3,7 @@ package sessionjwt
 import (
 	"net/http"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 var (

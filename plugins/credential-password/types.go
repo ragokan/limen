@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 type ConfigOption func(*config)

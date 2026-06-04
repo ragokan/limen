@@ -1,10 +1,10 @@
-module github.com/thecodearcher/limen/adapters/gorm
+module github.com/ragokan/limen/adapters/gorm
 
 go 1.25.0
 
 require (
+	github.com/ragokan/limen v0.1.2
 	github.com/stretchr/testify v1.11.1
-	github.com/thecodearcher/limen v0.1.1
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.30.1
 )
@@ -21,3 +21,5 @@ require (
 	golang.org/x/text v0.35.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/ragokan/limen => ../..

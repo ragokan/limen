@@ -11,14 +11,14 @@
 <p align="center">
   <a href="https://limenauth.dev">Documentation</a>
   ·
-  <a href="https://github.com/thecodearcher/limen/issues">Issues</a>
+  <a href="https://github.com/ragokan/limen/issues">Issues</a>
   ·
   <a href="https://x.com/limenauth">X (@limenauth)</a>
 </p>
 
 <p align="center">
-  <a href="https://pkg.go.dev/github.com/thecodearcher/limen"><img src="https://img.shields.io/badge/reference-pkg.go.dev-ffffff?style=flat&colorA=000000&colorB=000000&logo=go&logoColor=white" alt="Go reference" /></a>
-  <a href="https://github.com/thecodearcher/limen/stargazers"><img src="https://img.shields.io/github/stars/thecodearcher/limen?style=flat&colorA=000000&colorB=000000&logo=github" alt="GitHub stars" /></a>
+  <a href="https://pkg.go.dev/github.com/ragokan/limen"><img src="https://img.shields.io/badge/reference-pkg.go.dev-ffffff?style=flat&colorA=000000&colorB=000000&logo=go&logoColor=white" alt="Go reference" /></a>
+  <a href="https://github.com/ragokan/limen/stargazers"><img src="https://img.shields.io/github/stars/thecodearcher/limen?style=flat&colorA=000000&colorB=000000&logo=github" alt="GitHub stars" /></a>
 
 </p>
 
@@ -45,14 +45,14 @@ Full guides, configuration reference, and plugin documentation are available at 
 ## Installation
 
 ```bash
-go get github.com/thecodearcher/limen
+go get github.com/ragokan/limen
 ```
 
 Then add the adapter and plugins your application needs:
 
 ```bash
-go get github.com/thecodearcher/limen/adapters/gorm
-go get github.com/thecodearcher/limen/plugins/credential-password
+go get github.com/ragokan/limen/adapters/gorm
+go get github.com/ragokan/limen/plugins/credential-password
 ```
 
 ## Quick Start
@@ -67,9 +67,9 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"github.com/thecodearcher/limen"
-	gormadapter "github.com/thecodearcher/limen/adapters/gorm"
-	credentialpassword "github.com/thecodearcher/limen/plugins/credential-password"
+	"github.com/ragokan/limen"
+	gormadapter "github.com/ragokan/limen/adapters/gorm"
+	credentialpassword "github.com/ragokan/limen/plugins/credential-password"
 )
 
 func main() {

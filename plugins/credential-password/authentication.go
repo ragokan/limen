@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 // SignInWithCredentialAndPassword authenticates a user with either email or username (if enabled) and password.

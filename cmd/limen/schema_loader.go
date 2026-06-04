@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 func loadSchemaFromConfig(filePath string) (limen.SchemaDefinitionMap, error) {

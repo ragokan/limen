@@ -1,12 +1,12 @@
-module github.com/thecodearcher/limen/plugins/two-factor
+module github.com/ragokan/limen/plugins/two-factor
 
 go 1.25.0
 
 require (
 	github.com/pquerna/otp v1.4.0
+	github.com/ragokan/limen v0.1.2
+	github.com/ragokan/limen/plugins/credential-password v0.1.2
 	github.com/stretchr/testify v1.11.1
-	github.com/thecodearcher/limen v0.1.1
-	github.com/thecodearcher/limen/plugins/credential-password v0.1.0
 )
 
 require (
@@ -17,3 +17,7 @@ require (
 	golang.org/x/sys v0.41.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/ragokan/limen => ../..
+
+replace github.com/ragokan/limen/plugins/credential-password => ../credential-password

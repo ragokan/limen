@@ -3,7 +3,7 @@ package credentialpassword
 import (
 	"strings"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 func (p *credentialPasswordPlugin) validatePassword(password string) error {

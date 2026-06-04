@@ -1,6 +1,6 @@
 package twofactor
 
-import "github.com/thecodearcher/limen"
+import "github.com/ragokan/limen"
 
 type SchemaUserTwoFactorOption func(*twoFactorSchema)
 

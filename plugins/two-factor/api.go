@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 // API is the public interface for the two-factor authentication plugin.

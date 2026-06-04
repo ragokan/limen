@@ -8,10 +8,10 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"github.com/thecodearcher/limen"
-	gormadapter "github.com/thecodearcher/limen/adapters/gorm"
-	"github.com/thecodearcher/limen/plugins/oauth"
-	oauthgoogle "github.com/thecodearcher/limen/plugins/oauth-google"
+	"github.com/ragokan/limen"
+	gormadapter "github.com/ragokan/limen/adapters/gorm"
+	"github.com/ragokan/limen/plugins/oauth"
+	oauthgoogle "github.com/ragokan/limen/plugins/oauth-google"
 )
 
 func main() {

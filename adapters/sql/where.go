@@ -3,7 +3,7 @@ package sql
 import (
 	"strings"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 // buildWhere returns a WHERE clause (without "WHERE") and args. Uses ? placeholders; caller must rebind before execute.

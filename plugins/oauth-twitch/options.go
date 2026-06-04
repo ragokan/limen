@@ -1,6 +1,6 @@
 package oauthtwitch
 
-import "github.com/thecodearcher/limen/plugins/oauth"
+import "github.com/ragokan/limen/plugins/oauth"
 
 // ConfigOption configures the Twitch OAuth plugin.
 type ConfigOption func(*config)

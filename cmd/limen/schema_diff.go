@@ -3,7 +3,7 @@ package main
 import (
 	"strings"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 // schemaDiff represents the differences between an existing schema and a required schema

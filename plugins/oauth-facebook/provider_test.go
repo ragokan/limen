@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/thecodearcher/limen/plugins/oauth"
+	"github.com/ragokan/limen/plugins/oauth"
 )
 
 func TestGetUserInfo_EmailVerificationUnknown(t *testing.T) {

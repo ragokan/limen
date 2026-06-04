@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 func (o *oauthPlugin) CreateOrLinkAccount(ctx context.Context, info *limen.OAuthAccountProfile) (*limen.AuthenticationResult, error) {

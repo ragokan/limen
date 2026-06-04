@@ -8,10 +8,10 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"github.com/thecodearcher/limen"
-	gormadapter "github.com/thecodearcher/limen/adapters/gorm"
-	credentialpassword "github.com/thecodearcher/limen/plugins/credential-password"
-	twofactor "github.com/thecodearcher/limen/plugins/two-factor"
+	"github.com/ragokan/limen"
+	gormadapter "github.com/ragokan/limen/adapters/gorm"
+	credentialpassword "github.com/ragokan/limen/plugins/credential-password"
+	twofactor "github.com/ragokan/limen/plugins/two-factor"
 )
 
 func main() {

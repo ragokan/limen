@@ -10,7 +10,7 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"github.com/thecodearcher/limen/plugins/oauth"
+	"github.com/ragokan/limen/plugins/oauth"
 )
 
 func New(opts ...ConfigOption) oauth.Provider {

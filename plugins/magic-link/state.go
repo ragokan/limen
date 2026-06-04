@@ -10,7 +10,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 // MagicLinkState is the per-request state persisted alongside a magic-link

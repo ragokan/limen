@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 func (a *Adapter) Create(ctx context.Context, tableName limen.SchemaTableName, data map[string]any) error {

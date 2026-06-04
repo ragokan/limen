@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/thecodearcher/limen/plugins/oauth"
+	"github.com/ragokan/limen/plugins/oauth"
 )
 
 func TestGetUserInfo_MapsVerifiedIDTokenClaims(t *testing.T) {

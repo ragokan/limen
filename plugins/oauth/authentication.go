@@ -8,7 +8,7 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 func (o *oauthPlugin) getProviderConfig(provider Provider) (*oauth2.Config, []oauth2.AuthCodeOption) {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/thecodearcher/limen/plugins/oauth"
+	"github.com/ragokan/limen/plugins/oauth"
 )
 
 func TestLinkedInIssuer(t *testing.T) {

@@ -1,4 +1,4 @@
-module github.com/thecodearcher/limen/cmd/limen
+module github.com/ragokan/limen/cmd/limen
 
 go 1.25.0
 
@@ -6,7 +6,7 @@ require (
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/iancoleman/strcase v0.3.0
 	github.com/jackc/pgx/v5 v5.6.0
-	github.com/thecodearcher/limen v0.1.1
+	github.com/ragokan/limen v0.1.2
 	github.com/urfave/cli/v3 v3.6.1
 )
 
@@ -20,3 +20,5 @@ require (
 	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.35.0 // indirect
 )
+
+replace github.com/ragokan/limen => ../..

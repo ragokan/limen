@@ -9,7 +9,7 @@ body:
         sections below so we can reproduce the issue quickly.
 
         **Do not report security vulnerabilities here.** See
-        [SECURITY.md](https://github.com/thecodearcher/limen/blob/main/SECURITY.md).
+        [SECURITY.md](https://github.com/ragokan/limen/blob/main/SECURITY.md).
 
   - type: textarea
     id: summary
@@ -72,7 +72,7 @@ body:
     id: limen-version
     attributes:
       label: Limen version(s)
-      description: Output of `go list -m github.com/thecodearcher/limen/...` or the relevant module version(s).
+      description: Output of `go list -m github.com/ragokan/limen/...` or the relevant module version(s).
       placeholder: "e.g. limen v0.1.0, adapters/gorm v0.0.2"
     validations:
       required: true

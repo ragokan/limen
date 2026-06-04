@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 func newTestLimenAndPlugin(t *testing.T, opts ...ConfigOption) (*limen.Limen, *magicLinkPlugin) {

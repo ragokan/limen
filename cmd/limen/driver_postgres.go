@@ -7,7 +7,7 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 type postgresDriver struct {

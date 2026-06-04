@@ -6,7 +6,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 type twoFactorHandlers struct {

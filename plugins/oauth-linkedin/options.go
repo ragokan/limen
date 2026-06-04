@@ -1,6 +1,6 @@
 package oauthlinkedin
 
-import "github.com/thecodearcher/limen/plugins/oauth"
+import "github.com/ragokan/limen/plugins/oauth"
 
 // ConfigOption configures the LinkedIn OAuth plugin.
 type ConfigOption func(*config)

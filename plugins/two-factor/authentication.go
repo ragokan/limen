@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/thecodearcher/limen"
-	credentialpassword "github.com/thecodearcher/limen/plugins/credential-password"
+	"github.com/ragokan/limen"
+	credentialpassword "github.com/ragokan/limen/plugins/credential-password"
 )
 
 // InitiateTwoFactorSetup initiates the 2FA setup process

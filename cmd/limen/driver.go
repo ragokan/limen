@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 // Driver defines the interface for database driver-specific operations

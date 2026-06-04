@@ -1,6 +1,6 @@
 package oauthgoogle
 
-import "github.com/thecodearcher/limen/plugins/oauth"
+import "github.com/ragokan/limen/plugins/oauth"
 
 // ConfigOption configures the Google OAuth plugin.
 type ConfigOption func(*config)

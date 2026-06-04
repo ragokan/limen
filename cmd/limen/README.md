@@ -21,7 +21,7 @@ go build -o limen
 Or install globally:
 
 ```bash
-go install github.com/thecodearcher/limen/cmd/limen@latest
+go install github.com/ragokan/limen/cmd/limen@latest
 ```
 
 ## Commands Overview

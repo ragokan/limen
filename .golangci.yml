@@ -30,9 +30,9 @@ linters:
     errcheck:
       # HTTP handlers rarely recover from ResponseWriter failures; Responder returns error for callers that need it.
       exclude-functions:
-        - (github.com/thecodearcher/limen.Responder).JSON
-        - (github.com/thecodearcher/limen.Responder).Error
-        - (github.com/thecodearcher/limen.Responder).SessionResponse
+        - (github.com/ragokan/limen.Responder).JSON
+        - (github.com/ragokan/limen.Responder).Error
+        - (github.com/ragokan/limen.Responder).SessionResponse
     funlen:
       lines: 100
       statements: 50
@@ -103,7 +103,7 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - github.com/thecodearcher/limen
+        - github.com/ragokan/limen
   exclusions:
     generated: lax
     paths:

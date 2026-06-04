@@ -8,7 +8,7 @@ import (
 	pqotp "github.com/pquerna/otp"
 	pqtotp "github.com/pquerna/otp/totp"
 
-	"github.com/thecodearcher/limen"
+	"github.com/ragokan/limen"
 )
 
 type totp struct {
