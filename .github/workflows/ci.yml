@@ -14,9 +14,9 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.3
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6.4.0
         with:
           go-version: "1.25"
 
@@ -30,9 +30,9 @@ jobs:
     name: Standalone modules
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.3
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6.4.0
         with:
           go-version: "1.25"
 
@@ -43,9 +43,9 @@ jobs:
     name: PostgreSQL 18
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.3
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6.4.0
         with:
           go-version: "1.25"
 
@@ -56,9 +56,9 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.3
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6.4.0
         with:
           go-version: "1.25"
 
