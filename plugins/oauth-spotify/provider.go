@@ -86,8 +86,9 @@ func (s *spotifyProvider) GetUserInfo(ctx context.Context, token *oauth.TokenRes
 	}
 
 	return &oauth.ProviderUserInfo{
-		ID:            id,
-		Email:         email,
+		ID:    id,
+		Email: email,
+		// Spotify /v1/me exposes email but does not verify ownership of it.
 		EmailVerified: false,
 		Name:          name,
 		AvatarURL:     extractAvatarURL(raw),

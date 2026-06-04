@@ -77,6 +77,7 @@ func (f *facebookProvider) GetUserInfo(ctx context.Context, token *oauth.TokenRe
 	}
 	name, _ := raw["name"].(string)
 	email, _ := raw["email"].(string)
+	// Meta Graph API does not normally include an email verification claim.
 	emailVerified, _ := raw["email_verified"].(bool)
 
 	avatarURL := extractPictureURL(raw)

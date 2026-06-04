@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 
 	"golang.org/x/oauth2"
 
@@ -16,6 +17,8 @@ var linkedinEndpoint = oauth2.Endpoint{
 	AuthURL:  "https://www.linkedin.com/oauth/v2/authorization",
 	TokenURL: "https://www.linkedin.com/oauth/v2/accessToken",
 }
+
+const linkedinIssuer = "https://www.linkedin.com/oauth"
 
 // New creates a LinkedIn OAuth provider that implements oauth.Provider.
 func New(opts ...ConfigOption) oauth.Provider {
@@ -37,7 +40,7 @@ type linkedInProvider struct {
 
 func newLinkedInProvider(cfg *config) *linkedInProvider {
 	if cfg.verifyIDToken == nil {
-		cfg.verifyIDToken = oauth.NewIDTokenVerifier("https://www.linkedin.com", cfg.clientID)
+		cfg.verifyIDToken = oauth.NewIDTokenVerifier(linkedinIssuer, cfg.clientID)
 	}
 	config := &oauth2.Config{
 		ClientID:     cfg.clientID,
@@ -88,17 +91,24 @@ func (l *linkedInProvider) GetUserInfo(ctx context.Context, token *oauth.TokenRe
 	name, _ := claims["name"].(string)
 	picture, _ := claims["picture"].(string)
 
-	emailVerified := false
-	if verified, ok := claims["email_verified"].(string); ok {
-		emailVerified = verified == "true"
-	}
-
 	return &oauth.ProviderUserInfo{
 		ID:            id,
 		Email:         email,
-		EmailVerified: emailVerified,
+		EmailVerified: boolClaim(claims, "email_verified"),
 		Name:          name,
 		AvatarURL:     picture,
 		Raw:           claims,
 	}, nil
+}
+
+func boolClaim(raw map[string]any, key string) bool {
+	switch v := raw[key].(type) {
+	case bool:
+		return v
+	case string:
+		parsed, err := strconv.ParseBool(v)
+		return err == nil && parsed
+	default:
+		return false
+	}
 }

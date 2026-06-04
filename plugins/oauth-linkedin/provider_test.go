@@ -7,6 +7,14 @@ import (
 	"github.com/thecodearcher/limen/plugins/oauth"
 )
 
+func TestLinkedInIssuer(t *testing.T) {
+	t.Parallel()
+
+	if linkedinIssuer != "https://www.linkedin.com/oauth" {
+		t.Fatalf("linkedinIssuer = %q", linkedinIssuer)
+	}
+}
+
 func TestGetUserInfo_UsesIDTokenVerifier(t *testing.T) {
 	t.Parallel()
 
@@ -36,5 +44,28 @@ func TestGetUserInfo_UsesIDTokenVerifier(t *testing.T) {
 	}
 	if info.ID != "linkedin-user-1" || info.Email != "user@example.com" || !info.EmailVerified {
 		t.Fatalf("unexpected user info: %#v", info)
+	}
+}
+
+func TestGetUserInfo_MapsBooleanEmailVerifiedClaim(t *testing.T) {
+	t.Parallel()
+
+	provider := New(
+		WithClientID("client-id"),
+		WithIDTokenVerifier(func(_ context.Context, _ string) (map[string]any, error) {
+			return map[string]any{
+				"sub":            "linkedin-user-1",
+				"email":          "user@example.com",
+				"email_verified": true,
+			}, nil
+		}),
+	)
+
+	info, err := provider.GetUserInfo(context.Background(), &oauth.TokenResponse{IDToken: "id-token"})
+	if err != nil {
+		t.Fatalf("GetUserInfo: %v", err)
+	}
+	if !info.EmailVerified {
+		t.Fatalf("expected verified email: %#v", info)
 	}
 }
