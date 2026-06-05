@@ -13,19 +13,28 @@ import (
 	"github.com/ragokan/limen/plugins/oauth"
 )
 
+const (
+	linkedinIssuer             = "https://www.linkedin.com/oauth"
+	linkedinScopeOpenID        = "openid"
+	linkedinScopeProfile       = "profile"
+	linkedinScopeEmail         = "email"
+	linkedinClaimEmail         = "email"
+	linkedinClaimName          = "name"
+	linkedinClaimEmailVerified = "email_verified"
+)
+
+// #nosec G101 -- LinkedIn OAuth endpoint URLs are public provider metadata, not credentials.
 var linkedinEndpoint = oauth2.Endpoint{
 	AuthURL:  "https://www.linkedin.com/oauth/v2/authorization",
 	TokenURL: "https://www.linkedin.com/oauth/v2/accessToken",
 }
-
-const linkedinIssuer = "https://www.linkedin.com/oauth"
 
 // New creates a LinkedIn OAuth provider that implements oauth.Provider.
 func New(opts ...ConfigOption) oauth.Provider {
 	cfg := &config{
 		clientID:     os.Getenv("LINKEDIN_CLIENT_ID"),
 		clientSecret: os.Getenv("LINKEDIN_CLIENT_SECRET"),
-		scopes:       []string{"openid", "profile", "email"},
+		scopes:       []string{linkedinScopeOpenID, linkedinScopeProfile, linkedinScopeEmail},
 	}
 	for _, opt := range opts {
 		opt(cfg)
@@ -41,7 +50,7 @@ type linkedInProvider struct {
 func newLinkedInProvider(cfg *config) *linkedInProvider {
 	scopes := cfg.scopes
 	if len(scopes) == 0 {
-		scopes = []string{"openid", "profile", "email"}
+		scopes = []string{linkedinScopeOpenID, linkedinScopeProfile, linkedinScopeEmail}
 	}
 	if cfg.verifyIDToken == nil {
 		cfg.verifyIDToken = oauth.NewIDTokenVerifier(linkedinIssuer, cfg.clientID)
@@ -95,17 +104,17 @@ func (l *linkedInProvider) GetUserInfo(ctx context.Context, token *oauth.TokenRe
 		return nil, errors.New("linkedin: missing sub claim")
 	}
 
-	email, _ := claims["email"].(string)
+	email, _ := claims[linkedinClaimEmail].(string)
 	if email == "" {
 		return nil, errors.New("linkedin: missing email claim")
 	}
-	name, _ := claims["name"].(string)
+	name, _ := claims[linkedinClaimName].(string)
 	picture, _ := claims["picture"].(string)
 
 	return &oauth.ProviderUserInfo{
 		ID:            id,
 		Email:         email,
-		EmailVerified: boolClaim(claims, "email_verified"),
+		EmailVerified: boolClaim(claims, linkedinClaimEmailVerified),
 		Name:          name,
 		AvatarURL:     picture,
 		Raw:           claims,

@@ -11,6 +11,7 @@ import (
 // ============================================================================
 
 const (
+	// #nosec G101 -- schema table name, not a credential.
 	RefreshTokenSchemaTableName limen.SchemaTableName = "jwt_refresh_tokens"
 
 	RefreshTokenSchemaTokenField     limen.SchemaField = "token"

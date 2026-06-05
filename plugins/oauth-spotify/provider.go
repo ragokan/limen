@@ -13,6 +13,8 @@ import (
 	"github.com/ragokan/limen/plugins/oauth"
 )
 
+const spotifyScopeUserReadEmail = "user-read-email"
+
 //nolint:gosec // OAuth endpoint URL, not a credential.
 var spotifyEndpoint = oauth2.Endpoint{
 	AuthURL:  "https://accounts.spotify.com/authorize",
@@ -24,7 +26,7 @@ func New(opts ...ConfigOption) oauth.Provider {
 	cfg := &config{
 		clientID:     os.Getenv("SPOTIFY_CLIENT_ID"),
 		clientSecret: os.Getenv("SPOTIFY_CLIENT_SECRET"),
-		scopes:       []string{"user-read-email"},
+		scopes:       []string{spotifyScopeUserReadEmail},
 	}
 	for _, opt := range opts {
 		opt(cfg)
@@ -41,7 +43,7 @@ type spotifyProvider struct {
 func newSpotifyProvider(cfg *config) *spotifyProvider {
 	scopes := cfg.scopes
 	if len(scopes) == 0 {
-		scopes = []string{"user-read-email"}
+		scopes = []string{spotifyScopeUserReadEmail}
 	}
 	config := &oauth2.Config{
 		ClientID:     cfg.clientID,

@@ -132,21 +132,22 @@ func (a *Adapter) FindMany(ctx context.Context, tableName limen.SchemaTableName,
 	return results, a.formatError(err)
 }
 
-func (a *Adapter) Update(ctx context.Context, tableName limen.SchemaTableName, conditions []limen.Where, updates map[string]any) error {
+func (a *Adapter) Update(ctx context.Context, tableName limen.SchemaTableName, conditions []limen.Where, updates map[string]any) (int64, error) {
 	if len(updates) == 0 {
-		return nil
+		return 0, nil
 	}
 	if len(conditions) == 0 {
-		return fmt.Errorf("%w: conditions required to prevent accidental table-wide update", limen.ErrMissingConditions)
+		return 0, fmt.Errorf("%w: conditions required to prevent accidental table-wide update", limen.ErrMissingConditions)
 	}
 
 	db := a.getDB()
 	query := db.WithContext(ctx).Table(string(tableName))
 	query, err := a.applyConditions(query, conditions)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return query.Updates(updates).Error
+	result := query.Updates(updates)
+	return result.RowsAffected, result.Error
 }
 
 func (a *Adapter) Delete(ctx context.Context, tableName limen.SchemaTableName, conditions []limen.Where) error {

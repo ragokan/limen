@@ -19,11 +19,11 @@ type sqlMigrationGenerator struct {
 	useAutoIncrementIDs bool
 }
 
-func newSQLMigrationGenerator(driver Driver, config *cliConfig) (*sqlMigrationGenerator, error) {
+func newSQLMigrationGenerator(driver Driver, config *cliConfig) *sqlMigrationGenerator {
 	return &sqlMigrationGenerator{
 		driver:              driver,
 		useAutoIncrementIDs: config.UseAutoIncrementID,
-	}, nil
+	}
 }
 
 func (s *sqlMigrationGenerator) generateUpMigration(schema *limen.SchemaDefinition, diff *schemaDiff) (string, error) {
@@ -82,11 +82,7 @@ func (s *sqlMigrationGenerator) generateMigrationForExistingTable(tableName lime
 	var buf strings.Builder
 	statements := []string{}
 
-	alterTableStatement, err := s.generateUpAlterTableStatement(tableName, diff)
-	if err != nil {
-		return "", err
-	}
-
+	alterTableStatement := s.generateUpAlterTableStatement(tableName, diff)
 	if alterTableStatement != "" {
 		statements = append(statements, alterTableStatement)
 	}
@@ -111,11 +107,7 @@ func (s *sqlMigrationGenerator) generateAlterDownMigration(tableName limen.Schem
 		statements = append(statements, dropSQL)
 	}
 
-	downAlterTableStatement, err := s.generateDownAlterTableStatement(tableName, diff)
-	if err != nil {
-		return "", err
-	}
-
+	downAlterTableStatement := s.generateDownAlterTableStatement(tableName, diff)
 	if downAlterTableStatement != "" {
 		statements = append(statements, downAlterTableStatement)
 	}
@@ -127,9 +119,9 @@ func (s *sqlMigrationGenerator) generateAlterDownMigration(tableName limen.Schem
 	return buf.String(), nil
 }
 
-func (s *sqlMigrationGenerator) generateUpAlterTableStatement(tableName limen.SchemaTableName, diff *schemaDiff) (string, error) {
+func (s *sqlMigrationGenerator) generateUpAlterTableStatement(tableName limen.SchemaTableName, diff *schemaDiff) string {
 	if len(diff.AddedColumns) == 0 && len(diff.AddedForeignKeys) == 0 {
-		return "", nil
+		return ""
 	}
 
 	var buf strings.Builder
@@ -150,12 +142,12 @@ func (s *sqlMigrationGenerator) generateUpAlterTableStatement(tableName limen.Sc
 		buf.WriteString(strings.Join(statements, ",\n"))
 		buf.WriteString(";\n")
 	}
-	return buf.String(), nil
+	return buf.String()
 }
 
-func (s *sqlMigrationGenerator) generateDownAlterTableStatement(tableName limen.SchemaTableName, diff *schemaDiff) (string, error) {
+func (s *sqlMigrationGenerator) generateDownAlterTableStatement(tableName limen.SchemaTableName, diff *schemaDiff) string {
 	if len(diff.AddedColumns) == 0 && len(diff.AddedForeignKeys) == 0 {
-		return "", nil
+		return ""
 	}
 
 	var buf strings.Builder
@@ -177,7 +169,7 @@ func (s *sqlMigrationGenerator) generateDownAlterTableStatement(tableName limen.
 		buf.WriteString(strings.Join(statements, ",\n"))
 		buf.WriteString(";\n")
 	}
-	return buf.String(), nil
+	return buf.String()
 }
 
 func (s *sqlMigrationGenerator) generateColumnDefinition(field *limen.ColumnDefinition) string {

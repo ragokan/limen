@@ -42,7 +42,7 @@ func (d *baseDriver) ParseForeignKeyRow(scan func(dest ...any) error) (limen.For
 	}, nil
 }
 
-func (d *baseDriver) DropColumnSQL(tableName, columnName string) string {
+func (d *baseDriver) DropColumnSQL(_ string, columnName string) string {
 	return fmt.Sprintf("DROP COLUMN %s", columnName)
 }
 

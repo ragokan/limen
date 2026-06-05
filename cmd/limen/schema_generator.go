@@ -9,6 +9,8 @@ import (
 	"github.com/ragokan/limen"
 )
 
+const goTypeAny = "any"
+
 type GenerateOptions struct {
 	PackageName string              // Package name for generated code
 	Tags        []string            // Tags to include (json, gorm, sql, etc.)
@@ -67,7 +69,7 @@ func generateStructField(buf *strings.Builder, field limen.ColumnDefinition, opt
 	tags := strings.Join(tagParts, " ")
 
 	goType := columnTypeToGoType(field.Type)
-	if field.IsNullable && !strings.HasPrefix(goType, "*") && goType != "any" {
+	if field.IsNullable && !strings.HasPrefix(goType, "*") && goType != goTypeAny {
 		goType = "*" + goType
 	}
 
@@ -80,9 +82,25 @@ func generateStructField(buf *strings.Builder, field limen.ColumnDefinition, opt
 
 func columnTypeToGoType(ct limen.ColumnType) string {
 	switch ct {
-	case limen.ColumnTypeText, limen.ColumnTypeUUID:
+	case limen.ColumnTypeUUID, limen.ColumnTypeString, limen.ColumnTypeText:
 		return "string"
-	default:
+	case limen.ColumnTypeInt:
+		return "int"
+	case limen.ColumnTypeInt32:
+		return "int32"
+	case limen.ColumnTypeInt64:
+		return "int64"
+	case limen.ColumnTypeBool:
+		return "bool"
+	case limen.ColumnTypeTime:
+		return "time.Time"
+	case limen.ColumnTypeAny:
+		return goTypeAny
+	case limen.ColumnTypeMapStringAny:
+		return "map[string]any"
+	}
+	if ct != "" {
 		return string(ct)
 	}
+	return goTypeAny
 }

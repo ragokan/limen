@@ -6,6 +6,13 @@ import (
 	"github.com/ragokan/limen"
 )
 
+const (
+	sqlTypeInteger = "INTEGER"
+	sqlTypeBigInt  = "BIGINT"
+	sqlTypeBoolean = "BOOLEAN"
+	sqlTypeText    = "TEXT"
+)
+
 // Driver defines the interface for database driver-specific operations
 type Driver interface {
 	Name() string

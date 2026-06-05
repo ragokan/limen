@@ -95,8 +95,16 @@ func New(config *Config) (*Limen, error) {
 }
 
 func (a *Limen) Handler() http.Handler {
-	config := a.config.HTTP
+	return a.buildRouter(routerBuildOptions{includeOpenAPI: true, includeGlobalMiddleware: true})
+}
 
+type routerBuildOptions struct {
+	includeOpenAPI          bool
+	includeGlobalMiddleware bool
+}
+
+func (a *Limen) buildRouter(opts routerBuildOptions) *router {
+	config := a.config.HTTP.cloneForRouter()
 	config.basePath = normalizePath(config.basePath)
 
 	httpCore := &LimenHTTPCore{
@@ -107,7 +115,10 @@ func (a *Limen) Handler() http.Handler {
 		trustedOriginsPatterns: compileTrustedOrigins(config.trustedOrigins...),
 	}
 
-	globalMiddlewares := prepareGlobalMiddlewares(config, httpCore, a.config.Plugins)
+	var globalMiddlewares []Middleware
+	if opts.includeGlobalMiddleware {
+		globalMiddlewares = prepareGlobalMiddlewares(config, httpCore, a.config.Plugins)
+	}
 
 	router := newRouter(httpCore.Responder, globalMiddlewares...)
 	router.maxBodyBytes = config.maxBodyBytes
@@ -117,6 +128,9 @@ func (a *Limen) Handler() http.Handler {
 
 	registerBaseRoutes(router, httpCore, a.core, config.basePath)
 	registerPluginRoutes(router, a.config.Plugins, httpCore, config)
+	if opts.includeOpenAPI {
+		registerOpenAPIRoute(router, httpCore, a, config)
+	}
 
 	return router
 }
@@ -216,6 +230,34 @@ func registerPluginRoutes(router *router, plugins []Plugin, httpCore *LimenHTTPC
 	}
 }
 
+func registerOpenAPIRoute(router *router, httpCore *LimenHTTPCore, auth *Limen, config *httpConfig) {
+	if config.openAPIPath == "" {
+		return
+	}
+
+	routeBuilder := &RouteBuilder{
+		group: router.Group(config.basePath),
+		core:  httpCore,
+	}
+	routeBuilder.GETWithMetadata(
+		config.openAPIPath,
+		"openapi",
+		auth.OpenAPIHandler(config.openAPIOptions...).ServeHTTP,
+		NewRouteMetadata(
+			WithRouteSummary("Get OpenAPI document"),
+			WithRouteTags("docs"),
+			WithRouteResponse(http.StatusOK, OpenAPIResponse{
+				Description: "OpenAPI document",
+				Content: map[string]OpenAPIMediaType{
+					defaultOpenAPIContentType: {
+						Schema: OpenAPIObjectSchema(map[string]OpenAPISchema{}),
+					},
+				},
+			}),
+		),
+	)
+}
+
 func prepareGlobalMiddlewares(config *httpConfig, httpCore *LimenHTTPCore, plugins []Plugin) []Middleware {
 	globalMiddlewares := []Middleware{middlewareAdditionalFieldsContext()}
 
@@ -237,7 +279,7 @@ func prepareGlobalMiddlewares(config *httpConfig, httpCore *LimenHTTPCore, plugi
 func prepareRateLimiterRules(basePath string, httpConfig *httpConfig, plugins []Plugin) map[string]*RateLimitRule {
 	rules := make(map[string]*RateLimitRule)
 
-	customRules := httpConfig.rateLimiter.customRules
+	customRules := cloneRateLimitRules(httpConfig.rateLimiter.customRules)
 
 	for _, plugin := range plugins {
 		pluginRules := processPluginRateLimitRules(plugin, basePath, httpConfig, customRules)
@@ -248,6 +290,23 @@ func prepareRateLimiterRules(basePath string, httpConfig *httpConfig, plugins []
 	maps.Copy(rules, resolvedCustomRules)
 
 	return rules
+}
+
+func cloneRateLimitRules(rules map[string]*RateLimitRule) map[string]*RateLimitRule {
+	cloned := make(map[string]*RateLimitRule, len(rules))
+	for path, rule := range rules {
+		cloned[path] = cloneRateLimitRule(rule)
+	}
+	return cloned
+}
+
+func cloneRateLimitRule(rule *RateLimitRule) *RateLimitRule {
+	if rule == nil {
+		return nil
+	}
+	cloned := *rule
+	cloned.pathRegex = nil
+	return &cloned
 }
 
 func processPluginRateLimitRules(plugin Plugin, basePath string, httpConfig *httpConfig, customRules map[string]*RateLimitRule) map[string]*RateLimitRule {
@@ -262,7 +321,7 @@ func processPluginRateLimitRules(plugin Plugin, basePath string, httpConfig *htt
 
 	for _, rule := range pluginConfig.RateLimitRules {
 		finalRule := resolveRuleOverride(rule, customRules)
-		completePath := path.Join(normalizedBasePath, rule.path)
+		completePath := path.Join(normalizedBasePath, finalRule.path)
 
 		if err := compileAndSetRulePattern(finalRule, completePath); err != nil {
 			log.Panicf("failed to compile pattern for path %s: %v", completePath, err)

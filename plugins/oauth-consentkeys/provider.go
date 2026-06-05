@@ -14,14 +14,19 @@ import (
 	"github.com/ragokan/limen/plugins/oauth"
 )
 
-const defaultDiscoveryURL = "https://api.consentkeys.com/.well-known/openid-configuration"
+const (
+	defaultDiscoveryURL = "https://api.consentkeys.com/.well-known/openid-configuration"
+	scopeOpenID         = "openid"
+	scopeProfile        = "profile"
+	scopeEmail          = "email"
+)
 
 // New creates a ConsentKeys OAuth provider that implements oauth.Provider.
 func New(opts ...ConfigOption) oauth.Provider {
 	cfg := &config{
 		clientID:     os.Getenv("CONSENTKEYS_CLIENT_ID"),
 		clientSecret: os.Getenv("CONSENTKEYS_CLIENT_SECRET"),
-		scopes:       []string{"openid", "profile", "email"},
+		scopes:       []string{scopeOpenID, scopeProfile, scopeEmail},
 	}
 	for _, opt := range opts {
 		opt(cfg)
@@ -42,7 +47,7 @@ type consentKeysProvider struct {
 func newConsentKeysProvider(cfg *config) *consentKeysProvider {
 	scopes := cfg.scopes
 	if len(scopes) == 0 {
-		scopes = []string{"openid", "profile", "email"}
+		scopes = []string{scopeOpenID, scopeProfile, scopeEmail}
 	}
 	config := &oauth2.Config{
 		ClientID:     cfg.clientID,

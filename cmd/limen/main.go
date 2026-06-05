@@ -113,7 +113,7 @@ func runGenerateModels(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("error creating output directory: %w", err)
 	}
 
-	if err := os.WriteFile(outputFile, []byte(code), 0644); err != nil {
+	if err := os.WriteFile(outputFile, []byte(code), 0600); err != nil {
 		return fmt.Errorf("error writing output file: %w", err)
 	}
 
@@ -165,11 +165,11 @@ func runMigrateGenerate(ctx context.Context, cmd *cli.Command) error {
 		upFile := filepath.Join(outputPath, fmt.Sprintf("%s.up.sql", migration.Version))
 		downFile := filepath.Join(outputPath, fmt.Sprintf("%s.down.sql", migration.Version))
 
-		if err := os.WriteFile(upFile, []byte(migration.UpSQL), 0644); err != nil {
+		if err := os.WriteFile(upFile, []byte(migration.UpSQL), 0600); err != nil {
 			return fmt.Errorf("error writing migration file: %w", err)
 		}
 
-		if err := os.WriteFile(downFile, []byte(migration.DownSQL), 0644); err != nil {
+		if err := os.WriteFile(downFile, []byte(migration.DownSQL), 0600); err != nil {
 			return fmt.Errorf("error writing migration file: %w", err)
 		}
 

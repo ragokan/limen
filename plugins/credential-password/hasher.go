@@ -175,9 +175,24 @@ func (p *passwordHasher) parseHash(hashString string) (*hashInfo, error) {
 		return nil, fmt.Errorf("failed to decode hash: %w", err)
 	}
 	hashInfo.hash = hash
-	hashInfo.keyLength = uint32(len(hash))
+	keyLength, err := uint32Length(hash)
+	if err != nil {
+		return nil, err
+	}
+	hashInfo.keyLength = keyLength
 
 	return hashInfo, nil
+}
+
+func uint32Length(items []byte) (uint32, error) {
+	var n uint32
+	for range items {
+		if n == ^uint32(0) {
+			return 0, errors.New("hash length exceeds uint32")
+		}
+		n++
+	}
+	return n, nil
 }
 
 // parseParams parses the parameters section of a hash string.
@@ -204,6 +219,9 @@ func (p *passwordHasher) parseParams(paramsStr string, hashInfo *hashInfo) error
 		case "t":
 			hashInfo.time = uint32(value)
 		case "p":
+			if value > 255 {
+				return fmt.Errorf("parallelism exceeds uint8: %d", value)
+			}
 			hashInfo.parallel = uint8(value)
 		default:
 			return fmt.Errorf("unknown parameter: %s", key)

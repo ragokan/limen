@@ -78,22 +78,23 @@ func (d *mysqlDriver) IntrospectForeignKeysQuery(tableName string) (string, []an
 func (d *mysqlDriver) MapGoTypeToSQL(goType limen.ColumnType, isAutoIncrement bool) string {
 	switch goType {
 	case limen.ColumnTypeInt, limen.ColumnTypeInt32:
-		return "INTEGER"
+		return sqlTypeInteger
 	case limen.ColumnTypeInt64:
-		return "BIGINT"
+		return sqlTypeBigInt
 	case limen.ColumnTypeBool:
-		return "BOOLEAN"
+		return sqlTypeBoolean
 	case limen.ColumnTypeString:
 		return "VARCHAR(255)"
+	case limen.ColumnTypeText, limen.ColumnTypeAny:
+		return sqlTypeText
 	case limen.ColumnTypeTime:
 		return "TIMESTAMP"
 	case limen.ColumnTypeUUID:
 		return "VARCHAR(36)"
 	case limen.ColumnTypeMapStringAny:
 		return "JSON"
-	default:
-		return "TEXT"
 	}
+	return sqlTypeText
 }
 
 func (d *mysqlDriver) MapSQLTypeToGoType(dataType string) limen.ColumnType {
@@ -101,17 +102,17 @@ func (d *mysqlDriver) MapSQLTypeToGoType(dataType string) limen.ColumnType {
 	switch dataType {
 	case "UUID", "VARCHAR(36)", "CHAR(36)":
 		return limen.ColumnTypeUUID
-	case "BOOLEAN", "BOOL", "TINYINT(1)":
+	case sqlTypeBoolean, "BOOL", "TINYINT(1)":
 		return limen.ColumnTypeBool
-	case "INTEGER", "INT", "INT4", "SMALLINT", "MEDIUMINT":
+	case sqlTypeInteger, "INT", "INT4", "SMALLINT", "MEDIUMINT":
 		return limen.ColumnTypeInt32
-	case "BIGINT", "INT8":
+	case sqlTypeBigInt, "INT8":
 		return limen.ColumnTypeInt64
 	case "TIMESTAMP", "DATETIME", "DATE":
 		return limen.ColumnTypeTime
 	case "JSON":
 		return limen.ColumnTypeMapStringAny
-	case "VARCHAR", "TEXT", "CHAR", "TINYTEXT", "MEDIUMTEXT", "LONGTEXT":
+	case "VARCHAR", sqlTypeText, "CHAR", "TINYTEXT", "MEDIUMTEXT", "LONGTEXT":
 		return limen.ColumnTypeString
 	default:
 		return limen.ColumnTypeString

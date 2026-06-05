@@ -42,6 +42,10 @@ type httpConfig struct {
 	cookieConfig *cookieConfig
 	// maxBodyBytes caps JSON/form request bodies parsed by Limen.
 	maxBodyBytes int64
+	// openAPIPath serves the generated OpenAPI spec when set.
+	openAPIPath string
+	// openAPIOptions customize the generated OpenAPI spec served by openAPIPath.
+	openAPIOptions []OpenAPIOption
 }
 
 type cookieConfig struct {
@@ -116,9 +120,28 @@ func NewDefaultHTTPConfig(opts ...HTTPConfigOption) *httpConfig {
 	return config
 }
 
+func (c *httpConfig) cloneForRouter() *httpConfig {
+	if c == nil {
+		return nil
+	}
+	clone := *c
+	clone.middleware = append([]Middleware(nil), c.middleware...)
+	clone.disabledPaths = append([]string(nil), c.disabledPaths...)
+	clone.trustedOrigins = append([]string(nil), c.trustedOrigins...)
+	clone.openAPIOptions = append([]OpenAPIOption(nil), c.openAPIOptions...)
+	return &clone
+}
+
 func WithHTTPMaxBodyBytes(maxBodyBytes int64) HTTPConfigOption {
 	return func(c *httpConfig) {
 		c.maxBodyBytes = maxBodyBytes
+	}
+}
+
+func WithHTTPOpenAPI(path string, opts ...OpenAPIOption) HTTPConfigOption {
+	return func(c *httpConfig) {
+		c.openAPIPath = path
+		c.openAPIOptions = append([]OpenAPIOption(nil), opts...)
 	}
 }
 

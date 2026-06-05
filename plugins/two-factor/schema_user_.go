@@ -2,8 +2,6 @@ package twofactor
 
 import "github.com/ragokan/limen"
 
-type SchemaUserTwoFactorOption func(*twoFactorSchema)
-
 type userWithTwoFactorSchema struct {
 	*limen.UserSchema
 }
@@ -13,7 +11,7 @@ type UserWithTwoFactor struct {
 	TwoFactorEnabled bool
 }
 
-func newDefaultSchemaUserTwoFactor(userSchema *limen.UserSchema, opts ...SchemaUserTwoFactorOption) *userWithTwoFactorSchema {
+func newDefaultSchemaUserTwoFactor(userSchema *limen.UserSchema) *userWithTwoFactorSchema {
 	return &userWithTwoFactorSchema{
 		UserSchema: userSchema,
 	}
@@ -45,6 +43,6 @@ func (t *userWithTwoFactorSchema) UserToUserWithTwoFactor(user *limen.User) *Use
 	raw := user.Raw()
 	return &UserWithTwoFactor{
 		User:             user,
-		TwoFactorEnabled: raw[string(t.GetTwoFactorEnabledField())].(bool),
+		TwoFactorEnabled: raw[t.GetTwoFactorEnabledField()].(bool),
 	}
 }

@@ -35,7 +35,7 @@ func (s *cacheBlacklistStore) Has(ctx context.Context, jti string) (bool, error)
 }
 
 func (s *cacheBlacklistStore) Prune(_ context.Context) error {
-	//no-op since TTL handles expiry
+	// no-op since TTL handles expiry
 	return nil
 }
 

@@ -107,20 +107,35 @@ The built-in memory cache is process-local. For multi-instance deployments,
 choose a shared custom cache or database-backed rate limits.
 
 ```go
+ipExtractor, err := limen.NewTrustedProxyIPExtractor(
+	limen.WithTrustedProxyCIDRs("10.0.0.0/8"),
+	limen.WithTrustedProxyHeaders(limen.TrustedProxyHeaderXForwardedFor),
+	limen.WithTrustedProxyIPv6Prefix(64),
+)
+if err != nil {
+	return err
+}
+
 HTTP: limen.NewDefaultHTTPConfig(
 	limen.WithHTTPRateLimiter(
 		limen.WithRateLimiterMaxRequests(100),
 		limen.WithRateLimiterWindow(time.Minute),
-		limen.WithRateLimiterKeyGenerator(func(r *http.Request) string {
-			return r.RemoteAddr
-		}),
+		limen.WithRateLimiterKeyGenerator(ipExtractor),
 	),
+)
+
+Session: limen.NewDefaultSessionConfig(
+	limen.WithSessionIPAddressExtractor(ipExtractor),
 )
 ```
 
-If the app is behind a trusted proxy, use a key generator that reads the proxy's
-canonical client IP header. Only trust forwarded headers that your own proxy
-sets.
+Forwarded headers are ignored by default. If the app is behind a trusted proxy,
+use `NewTrustedProxyIPExtractor`, list only proxy CIDRs you operate, and enable
+only headers that your proxy overwrites or strips from incoming requests. The
+same extractor should be used for rate-limit keys and session IP metadata so the
+two surfaces agree. `WithTrustedProxyIPv6Prefix(64)` groups IPv6 clients by
+`/64`, which usually gives better rate-limit behavior with IPv6 privacy
+addresses.
 
 ## OAuth
 

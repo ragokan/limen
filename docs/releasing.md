@@ -46,8 +46,9 @@ PUSH=1 ./scripts/release-modules.sh vX.Y.Z
 
 The script requires a clean worktree, verifies internal module requirements,
 runs workspace module tests, runs standalone module tests with `GOWORK=off` and
-local module replaces, and creates the root/submodule tag set. CI separately
-checks public standalone resolution after tags are published.
+local module replaces, and creates the root/submodule tag set. After tags are
+published, run standalone module tests without local replaces to verify public
+module resolution.
 
 ## GitHub Release
 

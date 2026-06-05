@@ -11,7 +11,11 @@ use (
 	./examples/gin
 	./examples/oauth-google
 	./examples/two-factor
+	./integrations/huma
+	./plugins/admin
+	./plugins/api-key
 	./plugins/credential-password
+	./plugins/organization
 	./plugins/magic-link
 	./plugins/oauth
 	./plugins/oauth-apple

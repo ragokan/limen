@@ -192,7 +192,7 @@ func assertPostgresCount(t *testing.T, ctx context.Context, db *gorm.DB, table s
 func assertPostgresValue(t *testing.T, ctx context.Context, db *gorm.DB, table, column, want string) {
 	t.Helper()
 	var got string
-	query := fmt.Sprintf(`SELECT "%s" FROM "%s" LIMIT 1`, column, table)
+	query := fmt.Sprintf("SELECT %q FROM %q LIMIT 1", column, table)
 	if err := db.WithContext(ctx).Raw(query).Scan(&got).Error; err != nil {
 		t.Fatalf("select %s.%s: %v", table, column, err)
 	}

@@ -1,7 +1,12 @@
 package sessionjwt
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -170,6 +175,37 @@ func TestPerformRefresh_MissingTokenWithActiveFamilyRevokesFamily(t *testing.T) 
 	active, err := plugin.FamilyHasActiveTokens(t.Context(), "family-1")
 	require.NoError(t, err)
 	assert.False(t, active)
+}
+
+func TestListSessionsHTTPRedactsRefreshTokens(t *testing.T) {
+	t.Parallel()
+
+	plugin := New(WithSubjectResolver(func(subject string) (any, error) {
+		return strconv.ParseInt(subject, 10, 64)
+	}))
+	auth, _ := limen.NewTestLimen(t, plugin)
+	user := limen.SeedTestUser(t, auth, "jwt-sessions@test.com")
+	session := limen.SeedTestSession(t, auth, user.ID, user.Email)
+	require.NotEmpty(t, session.RefreshToken)
+	refreshToken, _, _ := strings.Cut(session.RefreshToken, ".")
+	require.NotEmpty(t, refreshToken)
+
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/auth/sessions", http.NoBody)
+	req.Header.Set("Authorization", "Bearer "+session.Token)
+	resp := httptest.NewRecorder()
+	auth.Handler().ServeHTTP(resp, req)
+
+	require.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
+	assert.NotContains(t, resp.Body.String(), session.RefreshToken)
+	assert.NotContains(t, resp.Body.String(), refreshToken)
+	assert.NotContains(t, resp.Body.String(), "token")
+	assert.NotContains(t, resp.Body.String(), "refreshToken")
+
+	var payload []map[string]any
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&payload))
+	require.Len(t, payload, 1)
+	assert.NotContains(t, payload[0], "token")
+	assert.NotContains(t, payload[0], "refreshToken")
 }
 
 func TestRotateRefreshToken_NilOldToken(t *testing.T) {

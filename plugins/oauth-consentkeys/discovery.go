@@ -1,6 +1,7 @@
 package oauthconsentkeys
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -31,7 +32,7 @@ func (c *config) validateEndpoints() {
 
 func fetchDiscoveryDocument(discoveryURL string) (*discoveryDocument, error) {
 	client := &http.Client{Timeout: 10 * time.Second}
-	req, err := http.NewRequest(http.MethodGet, discoveryURL, nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, discoveryURL, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("discovery request: %w", err)
 	}

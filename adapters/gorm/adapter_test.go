@@ -84,10 +84,11 @@ func TestGorm_Update(t *testing.T) {
 
 	adapter.Create(ctx, "test_items", map[string]any{"name": "Alice", "email": "old@test.com"})
 
-	err := adapter.Update(ctx, "test_items", []limen.Where{
+	affected, err := adapter.Update(ctx, "test_items", []limen.Where{
 		limen.Eq("name", "Alice"),
 	}, map[string]any{"email": "new@test.com"})
 	assert.NoError(t, err)
+	assert.Equal(t, int64(1), affected)
 
 	result, _ := adapter.FindOne(ctx, "test_items", []limen.Where{limen.Eq("name", "Alice")}, nil)
 	assert.Equal(t, "new@test.com", result["email"])
@@ -97,7 +98,7 @@ func TestGorm_Update_RequiresConditions(t *testing.T) {
 	adapter := setupTestGormDB(t)
 	ctx := context.Background()
 
-	err := adapter.Update(ctx, "test_items", nil, map[string]any{"email": "new@test.com"})
+	_, err := adapter.Update(ctx, "test_items", nil, map[string]any{"email": "new@test.com"})
 
 	assert.ErrorIs(t, err, limen.ErrMissingConditions)
 }
@@ -106,9 +107,10 @@ func TestGorm_Update_EmptyUpdatesNoop(t *testing.T) {
 	adapter := setupTestGormDB(t)
 	ctx := context.Background()
 
-	err := adapter.Update(ctx, "test_items", nil, map[string]any{})
+	affected, err := adapter.Update(ctx, "test_items", nil, map[string]any{})
 
 	assert.NoError(t, err)
+	assert.Equal(t, int64(0), affected)
 }
 
 func TestGorm_Delete(t *testing.T) {

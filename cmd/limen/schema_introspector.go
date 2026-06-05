@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -23,7 +24,7 @@ func (s *schemaIntrospector) getTables(tableNames []string) (map[string]bool, er
 	result := make(map[string]bool, len(tableNames))
 
 	query, args := s.driver.TableExistsBatchQuery(tableNames)
-	rows, err := s.db.Query(query, args...)
+	rows, err := s.db.QueryContext(context.Background(), query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +38,7 @@ func (s *schemaIntrospector) getTables(tableNames []string) (map[string]bool, er
 		result[tableName] = true
 	}
 
-	return result, nil
+	return result, rows.Err()
 }
 
 func (s *schemaIntrospector) introspectTable(tableName limen.SchemaTableName) (*limen.SchemaDefinition, error) {
@@ -66,64 +67,35 @@ func (s *schemaIntrospector) introspectTable(tableName limen.SchemaTableName) (*
 }
 
 func (s *schemaIntrospector) introspectColumns(tableName limen.SchemaTableName) ([]limen.ColumnDefinition, error) {
-	var columns []limen.ColumnDefinition
-
 	query, args := s.driver.IntrospectColumnsQuery(string(tableName))
-	rows, err := s.db.Query(query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		col, err := s.driver.ParseColumnRow(rows.Scan)
-		if err != nil {
-			return nil, err
-		}
-		columns = append(columns, col)
-	}
-
-	return columns, nil
+	return introspectRows(s.db, query, args, s.driver.ParseColumnRow)
 }
 
 func (s *schemaIntrospector) introspectIndexes(tableName limen.SchemaTableName) ([]limen.IndexDefinition, error) {
-	var indexes []limen.IndexDefinition
-
 	query, args := s.driver.IntrospectIndexesQuery(string(tableName))
-	rows, err := s.db.Query(query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		idx, err := s.driver.ParseIndexRow(rows.Scan)
-		if err != nil {
-			return nil, err
-		}
-		indexes = append(indexes, idx)
-	}
-
-	return indexes, nil
+	return introspectRows(s.db, query, args, s.driver.ParseIndexRow)
 }
 
 func (s *schemaIntrospector) introspectForeignKeys(tableName limen.SchemaTableName) ([]limen.ForeignKeyDefinition, error) {
-	var foreignKeys []limen.ForeignKeyDefinition
-
 	query, args := s.driver.IntrospectForeignKeysQuery(string(tableName))
-	rows, err := s.db.Query(query, args...)
+	return introspectRows(s.db, query, args, s.driver.ParseForeignKeyRow)
+}
+
+func introspectRows[T any](db *sql.DB, query string, args []any, parse func(func(dest ...any) error) (T, error)) ([]T, error) {
+	rows, err := db.QueryContext(context.Background(), query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
+	var out []T
 	for rows.Next() {
-		fk, err := s.driver.ParseForeignKeyRow(rows.Scan)
+		value, err := parse(rows.Scan)
 		if err != nil {
 			return nil, err
 		}
-		foreignKeys = append(foreignKeys, fk)
+		out = append(out, value)
 	}
 
-	return foreignKeys, nil
+	return out, rows.Err()
 }

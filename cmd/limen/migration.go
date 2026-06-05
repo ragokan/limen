@@ -29,10 +29,7 @@ func generateMigrations(db *sql.DB, driver Driver, config *cliConfig) ([]Migrati
 		return nil, fmt.Errorf("failed to get existing tables: %w", err)
 	}
 
-	generator, err := newSQLMigrationGenerator(driver, config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create migration generator: %w", err)
-	}
+	generator := newSQLMigrationGenerator(driver, config)
 
 	for schemaName, schemaDef := range config.Schemas {
 		var diff *schemaDiff

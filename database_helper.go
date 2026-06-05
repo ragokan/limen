@@ -95,8 +95,13 @@ func (core *LimenCore) Update(ctx context.Context, schema Schema, updatedData Mo
 }
 
 func (core *LimenCore) UpdateRaw(ctx context.Context, schema Schema, updatedData Model, conditions []Where, removeEmptyValues bool) error {
+	_, err := core.UpdateRawAffected(ctx, schema, updatedData, conditions, removeEmptyValues)
+	return err
+}
+
+func (core *LimenCore) UpdateRawAffected(ctx context.Context, schema Schema, updatedData Model, conditions []Where, removeEmptyValues bool) (int64, error) {
 	if len(conditions) == 0 {
-		return fmt.Errorf("%w: conditions required to prevent accidental table-wide update", ErrMissingConditions)
+		return 0, fmt.Errorf("%w: conditions required to prevent accidental table-wide update", ErrMissingConditions)
 	}
 
 	payload := make(map[string]any)
@@ -177,7 +182,7 @@ func (core *LimenCore) Delete(ctx context.Context, schema Schema, conditions []W
 	// if there are conditions, we update the soft delete field to the current time
 	// otherwise we delete the record directly
 	if schema.GetSoftDeleteField() != "" {
-		if err := db.Update(ctx, schema.GetTableName(), conditions, map[string]any{
+		if _, err := db.Update(ctx, schema.GetTableName(), conditions, map[string]any{
 			schema.GetSoftDeleteField(): time.Now(),
 		}); err != nil {
 			return err

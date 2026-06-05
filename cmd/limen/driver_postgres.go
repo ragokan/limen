@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -39,7 +40,7 @@ func (d *postgresDriver) getCurrentSchema(db *sql.DB) string {
 	}
 
 	var schema string
-	err := db.QueryRow("SELECT current_schema()").Scan(&schema)
+	err := db.QueryRowContext(context.Background(), "SELECT current_schema()").Scan(&schema)
 	if err != nil {
 		schema = "public"
 	}
@@ -123,27 +124,29 @@ func (d *postgresDriver) MapGoTypeToSQL(goType limen.ColumnType, isAutoIncrement
 			return "SERIAL"
 		case limen.ColumnTypeInt64:
 			return "BIGSERIAL"
+		case limen.ColumnTypeUUID, limen.ColumnTypeString, limen.ColumnTypeText, limen.ColumnTypeBool, limen.ColumnTypeTime, limen.ColumnTypeAny, limen.ColumnTypeMapStringAny:
 		}
 	}
 
 	switch goType {
 	case limen.ColumnTypeInt, limen.ColumnTypeInt32:
-		return "INTEGER"
+		return sqlTypeInteger
 	case limen.ColumnTypeInt64:
-		return "BIGINT"
+		return sqlTypeBigInt
 	case limen.ColumnTypeBool:
-		return "BOOLEAN"
+		return sqlTypeBoolean
 	case limen.ColumnTypeString:
 		return "VARCHAR(255)"
+	case limen.ColumnTypeText, limen.ColumnTypeAny:
+		return sqlTypeText
 	case limen.ColumnTypeTime:
 		return "TIMESTAMPTZ"
 	case limen.ColumnTypeUUID:
 		return "UUID"
 	case limen.ColumnTypeMapStringAny:
 		return "JSONB"
-	default:
-		return "TEXT"
 	}
+	return sqlTypeText
 }
 
 func (d *postgresDriver) MapSQLTypeToGoType(dataType string) limen.ColumnType {

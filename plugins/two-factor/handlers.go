@@ -70,13 +70,13 @@ func (a *twoFactorHandlers) FinalizeTwoFactorSetup(w http.ResponseWriter, r *htt
 		return
 	}
 
-	authResult, sessionResult, err := a.plugin.rotateSession(r, w, session)
+	sessionResult, err := a.plugin.rotateSession(r, w, session)
 	if err != nil {
 		a.responder.Error(w, r, err)
 		return
 	}
 
-	a.responder.SessionResponse(w, r, a.plugin.core, authResult, sessionResult)
+	a.responder.SessionResponse(w, r, a.plugin.core, &limen.AuthenticationResult{User: session.User}, sessionResult)
 }
 
 // Disable disables 2FA for the current user
@@ -101,13 +101,13 @@ func (a *twoFactorHandlers) Disable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authResult, sessionResult, err := a.plugin.rotateSession(r, w, session)
+	sessionResult, err := a.plugin.rotateSession(r, w, session)
 	if err != nil {
 		a.responder.Error(w, r, err)
 		return
 	}
 
-	a.responder.SessionResponse(w, r, a.plugin.core, authResult, sessionResult)
+	a.responder.SessionResponse(w, r, a.plugin.core, &limen.AuthenticationResult{User: session.User}, sessionResult)
 }
 
 // VerifyLoginWithTwoFactor verifies the 2FA code and completes the login process

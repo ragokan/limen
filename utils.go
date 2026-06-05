@@ -340,7 +340,7 @@ func resolveRuleOverride(rule *RateLimitRule, customRules map[string]*RateLimitR
 		delete(customRules, rule.path)
 		return customRule
 	}
-	return rule
+	return cloneRateLimitRule(rule)
 }
 
 func normalizePluginPath(basePath, pluginBasePath string, override *PluginHTTPOverride) string {

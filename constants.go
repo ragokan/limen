@@ -40,6 +40,9 @@ const (
 	PluginOAuth              PluginName = "oauth"
 	PluginSessionJWT         PluginName = "session-jwt"
 	PluginMagicLink          PluginName = "magic-link"
+	PluginAPIKey             PluginName = "api-key"
+	PluginAdmin              PluginName = "admin"
+	PluginOrganization       PluginName = "organization"
 )
 
 // ============================================================================

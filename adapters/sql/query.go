@@ -116,13 +116,13 @@ func (a *Adapter) FindMany(ctx context.Context, tableName limen.SchemaTableName,
 	return results, rows.Err()
 }
 
-func (a *Adapter) Update(ctx context.Context, tableName limen.SchemaTableName, conditions []limen.Where, updates map[string]any) error {
+func (a *Adapter) Update(ctx context.Context, tableName limen.SchemaTableName, conditions []limen.Where, updates map[string]any) (int64, error) {
 	if len(updates) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(conditions) == 0 {
-		return fmt.Errorf("update: conditions required to prevent accidental table-wide update")
+		return 0, fmt.Errorf("update: conditions required to prevent accidental table-wide update")
 	}
 	setParts := make([]string, 0, len(updates))
 	setArgs := make([]any, 0, len(updates))
@@ -132,15 +132,22 @@ func (a *Adapter) Update(ctx context.Context, tableName limen.SchemaTableName, c
 	}
 	whereSQL, whereArgs, err := a.buildWhere(conditions)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	args := make([]any, 0, len(setArgs)+len(whereArgs))
 	args = append(args, setArgs...)
 	args = append(args, whereArgs...)
 	query := "UPDATE " + a.quoteIdent(string(tableName)) + " SET " + strings.Join(setParts, ", ") + " WHERE " + whereSQL
 	query = a.rebind(query)
-	_, err = a.getExt().ExecContext(ctx, query, args...)
-	return err
+	result, err := a.getExt().ExecContext(ctx, query, args...)
+	if err != nil {
+		return 0, err
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+	return affected, nil
 }
 
 func (a *Adapter) Delete(ctx context.Context, tableName limen.SchemaTableName, conditions []limen.Where) error {

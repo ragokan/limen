@@ -127,10 +127,11 @@ func TestUpdate(t *testing.T) {
 
 	adapter.Create(ctx, "test_items", map[string]any{"name": "Alice", "email": "old@test.com"})
 
-	err := adapter.Update(ctx, "test_items", []limen.Where{
+	affected, err := adapter.Update(ctx, "test_items", []limen.Where{
 		limen.Eq("name", "Alice"),
 	}, map[string]any{"email": "new@test.com"})
 	assert.NoError(t, err)
+	assert.Equal(t, int64(1), affected)
 
 	result, _ := adapter.FindOne(ctx, "test_items", []limen.Where{limen.Eq("name", "Alice")}, nil)
 	assert.Equal(t, "new@test.com", result["email"])
@@ -314,7 +315,7 @@ func TestUpdate_RequiresConditions(t *testing.T) {
 	adapter := setupTestDB(t)
 	ctx := context.Background()
 
-	err := adapter.Update(ctx, "test_items", nil, map[string]any{"name": "bad"})
+	_, err := adapter.Update(ctx, "test_items", nil, map[string]any{"name": "bad"})
 	assert.Error(t, err)
 }
 

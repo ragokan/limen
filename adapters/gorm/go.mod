@@ -3,7 +3,7 @@ module github.com/ragokan/limen/adapters/gorm
 go 1.25.0
 
 require (
-	github.com/ragokan/limen v0.1.5
+	github.com/ragokan/limen v0.1.6
 	github.com/stretchr/testify v1.11.1
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/driver/sqlite v1.6.0

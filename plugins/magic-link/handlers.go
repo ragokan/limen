@@ -81,7 +81,7 @@ func (h *magicLinkHandlers) VerifyMagicLink(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	h.handleVerifyMagicLinkSuccess(w, r, result, sessionResult, callbackURL, errorCallbackURL)
+	h.handleVerifyMagicLinkSuccess(w, r, result, sessionResult, callbackURL)
 }
 
 func (h *magicLinkHandlers) resolveCallbackURLs(state *MagicLinkState) (string, string) {
@@ -121,7 +121,7 @@ func (o *magicLinkHandlers) validateRedirectURLs(data map[string]any) (string, s
 	return redirectURI, newUserRedirectURI, errorRedirectURI, nil
 }
 
-func (h *magicLinkHandlers) handleVerifyMagicLinkSuccess(w http.ResponseWriter, r *http.Request, result *limen.AuthenticationResult, sessionResult *limen.SessionResult, callbackURL string, errorCallbackURL string) {
+func (h *magicLinkHandlers) handleVerifyMagicLinkSuccess(w http.ResponseWriter, r *http.Request, result *limen.AuthenticationResult, sessionResult *limen.SessionResult, callbackURL string) {
 	if callbackURL != "" {
 		h.responder.RedirectWithSession(w, r, callbackURL, sessionResult)
 		return

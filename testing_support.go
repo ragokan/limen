@@ -112,23 +112,25 @@ func (a *testMemoryAdapter) FindMany(_ context.Context, tableName SchemaTableNam
 	return results, nil
 }
 
-func (a *testMemoryAdapter) Update(_ context.Context, tableName SchemaTableName, conditions []Where, updates map[string]any) error {
+func (a *testMemoryAdapter) Update(_ context.Context, tableName SchemaTableName, conditions []Where, updates map[string]any) (int64, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	if len(updates) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	tbl := a.table(tableName)
+	var affected int64
 	for _, row := range tbl.rows {
 		if testMatchesConditions(row, conditions) {
 			for k, v := range updates {
 				row[k] = testDerefPointer(v)
 			}
+			affected++
 		}
 	}
-	return nil
+	return affected, nil
 }
 
 func (a *testMemoryAdapter) Delete(_ context.Context, tableName SchemaTableName, conditions []Where) error {

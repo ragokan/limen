@@ -12,7 +12,7 @@ import (
 	"github.com/ragokan/limen/plugins/oauth"
 )
 
-var twitchEndpoint = oauth2.Endpoint{
+var twitchEndpoint = oauth2.Endpoint{ // #nosec G101 -- Twitch OAuth endpoint URLs are public provider metadata, not credentials.
 	AuthURL:   "https://id.twitch.tv/oauth2/authorize",
 	TokenURL:  "https://id.twitch.tv/oauth2/token",
 	AuthStyle: oauth2.AuthStyleInParams,

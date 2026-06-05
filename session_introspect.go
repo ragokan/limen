@@ -62,7 +62,7 @@ func (s *SessionSchema) getDefaultColumns(config *SchemaConfig) []ColumnDefiniti
 			IsNullable:   false,
 			IsPrimaryKey: false,
 			Tags: map[string]string{
-				schemaTagJSON: "token",
+				schemaTagJSON: string(SessionSchemaTokenField),
 			},
 		},
 		{

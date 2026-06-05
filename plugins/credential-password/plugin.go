@@ -11,11 +11,10 @@ import (
 )
 
 type credentialPasswordPlugin struct {
-	core               *limen.LimenCore
-	config             *config
-	userSchema         *limen.UserSchema
-	verificationSchema *limen.VerificationSchema
-	dbAction           *limen.DatabaseActionHelper
+	core       *limen.LimenCore
+	config     *config
+	userSchema *limen.UserSchema
+	dbAction   *limen.DatabaseActionHelper
 }
 
 // getUsernameField returns the resolved username field column name if username support is enabled.

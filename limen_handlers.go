@@ -2,12 +2,23 @@ package limen
 
 import (
 	"net/http"
+	"time"
 )
 
 type limenHandlers struct {
 	core      *LimenCore
 	responder *Responder
 	config    *httpConfig
+}
+
+type sessionListItem struct {
+	ID         any       `json:"id,omitempty"`
+	UserID     any       `json:"user_id"`
+	CreatedAt  time.Time `json:"created_at"`
+	ExpiresAt  time.Time `json:"expires_at"`
+	LastAccess time.Time `json:"last_access"`
+	IPAddress  string    `json:"ip_address,omitempty"`
+	UserAgent  string    `json:"user_agent,omitempty"`
 }
 
 func registerBaseRoutes(router *router, httpCore *LimenHTTPCore, core *LimenCore, basePath string) {
@@ -28,15 +39,36 @@ func newLimenHandlers(httpCore *LimenHTTPCore, core *LimenCore) *limenHandlers {
 }
 
 func (h *limenHandlers) RegisterRoutes(routeBuilder *RouteBuilder) {
-	routeBuilder.ProtectedGET("/me", "me", h.GetSession)
-	routeBuilder.ProtectedGET("/sessions", "list-sessions", h.ListSessions)
-	routeBuilder.ProtectedPOST("/signout", "signout", h.SignOut)
-	routeBuilder.ProtectedPOST("/revoke-sessions", "revoke-sessions", h.RevokeAllSessions)
+	routeBuilder.ProtectedGETWithMetadata("/me", "me", h.GetSession, coreRouteMetadata("Get current session"))
+	routeBuilder.ProtectedGETWithMetadata("/sessions", "list-sessions", h.ListSessions, coreRouteMetadata("List sessions"))
+	routeBuilder.ProtectedPOSTWithMetadata("/signout", "signout", h.SignOut, coreRouteMetadata(
+		"Sign out",
+		WithRouteResponse(http.StatusNoContent, OpenAPIResponse{Description: "No Content"}),
+	))
+	routeBuilder.ProtectedPOSTWithMetadata("/revoke-sessions", "revoke-sessions", h.RevokeAllSessions, coreRouteMetadata(
+		"Revoke sessions",
+		WithRouteResponse(http.StatusNoContent, OpenAPIResponse{Description: "No Content"}),
+	))
 
 	if h.core.EmailVerificationEnabled() {
-		routeBuilder.POST("/verify-email", "verify-email", h.VerifyEmail)
-		routeBuilder.ProtectedPOST("/email-verifications", "email-verifications", h.RequestEmailVerification)
+		routeBuilder.POSTWithMetadata("/verify-email", "verify-email", h.VerifyEmail, coreRouteMetadata(
+			"Verify email",
+			WithRouteAllowedContentTypes("application/json"),
+		))
+		routeBuilder.ProtectedPOSTWithMetadata("/email-verifications", "email-verifications", h.RequestEmailVerification, coreRouteMetadata(
+			"Request email verification",
+			WithRouteAllowedContentTypes("application/json"),
+		))
 	}
+}
+
+func coreRouteMetadata(summary string, opts ...RouteMetadataOption) *RouteMetadata {
+	options := []RouteMetadataOption{
+		WithRouteSummary(summary),
+		WithRouteTags("auth"),
+	}
+	options = append(options, opts...)
+	return NewRouteMetadata(options...)
 }
 
 func (h *limenHandlers) GetSession(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +95,28 @@ func (h *limenHandlers) ListSessions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.responder.JSON(w, r, http.StatusOK, sessions)
+	h.responder.JSON(w, r, http.StatusOK, redactedSessionList(sessions))
+}
+
+func redactedSessionList(sessions []Session) []sessionListItem {
+	out := make([]sessionListItem, 0, len(sessions))
+	for _, session := range sessions {
+		out = append(out, sessionListItem{
+			ID:         session.ID,
+			UserID:     session.UserID,
+			CreatedAt:  session.CreatedAt,
+			ExpiresAt:  session.ExpiresAt,
+			LastAccess: session.LastAccess,
+			IPAddress:  sessionMetadataString(session.Metadata, "ip_address"),
+			UserAgent:  sessionMetadataString(session.Metadata, "user_agent"),
+		})
+	}
+	return out
+}
+
+func sessionMetadataString(metadata map[string]any, key string) string {
+	value, _ := metadata[key].(string)
+	return value
 }
 
 func (h *limenHandlers) RevokeAllSessions(w http.ResponseWriter, r *http.Request) {

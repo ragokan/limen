@@ -14,6 +14,15 @@ import (
 	"github.com/ragokan/limen/plugins/oauth"
 )
 
+const (
+	appleIssuer             = "https://appleid.apple.com"
+	appleScopeName          = "name"
+	appleScopeEmail         = "email"
+	appleClaimEmailVerified = "email_verified"
+	appleClaimTrue          = "true"
+)
+
+// #nosec G101 -- Apple OAuth endpoint URLs are public provider metadata, not credentials.
 var appleEndpoint = oauth2.Endpoint{
 	AuthURL:   "https://appleid.apple.com/auth/authorize",
 	TokenURL:  "https://appleid.apple.com/auth/token",
@@ -25,7 +34,7 @@ func New(opts ...ConfigOption) oauth.Provider {
 	cfg := &config{
 		clientID:     os.Getenv("APPLE_CLIENT_ID"),
 		clientSecret: os.Getenv("APPLE_CLIENT_SECRET"),
-		scopes:       []string{"name", "email"},
+		scopes:       []string{appleScopeName, appleScopeEmail},
 	}
 	for _, opt := range opts {
 		opt(cfg)
@@ -41,10 +50,10 @@ type appleProvider struct {
 func newAppleProvider(cfg *config) *appleProvider {
 	scopes := cfg.scopes
 	if len(scopes) == 0 {
-		scopes = []string{"name", "email"}
+		scopes = []string{appleScopeName, appleScopeEmail}
 	}
 	if cfg.verifyIDToken == nil {
-		cfg.verifyIDToken = oauth.NewIDTokenVerifier("https://appleid.apple.com", cfg.clientID)
+		cfg.verifyIDToken = oauth.NewIDTokenVerifier(appleIssuer, cfg.clientID)
 	}
 	oauthCfg := &oauth2.Config{
 		ClientID:     cfg.clientID,
@@ -95,15 +104,16 @@ func (a *appleProvider) GetUserInfo(ctx context.Context, token *oauth.TokenRespo
 		return nil, errors.New("apple: missing sub claim")
 	}
 
-	email, _ := claims["email"].(string)
+	email, _ := claims[appleScopeEmail].(string)
 	if email == "" {
 		return nil, errors.New("apple: missing email claim")
 	}
 
 	emailVerified := false
-	if v, ok := claims["email_verified"].(string); ok {
-		emailVerified = v == "true"
-	} else if v, ok := claims["email_verified"].(bool); ok {
+	switch v := claims[appleClaimEmailVerified].(type) {
+	case string:
+		emailVerified = v == appleClaimTrue
+	case bool:
 		emailVerified = v
 	}
 

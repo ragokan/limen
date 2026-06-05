@@ -42,7 +42,7 @@ func TestRotateSession_RevokesCurrentAndIssuesNew(t *testing.T) {
 		Session: &limen.Session{Token: oldSess.Token, UserID: user.ID},
 	}
 
-	_, newSess, err := p.rotateSession(req, w, validated)
+	newSess, err := p.rotateSession(req, w, validated)
 	require.NoError(t, err)
 	assert.NotEqual(t, oldSess.Token, newSess.Token, "new session token must differ from old")
 
@@ -68,7 +68,7 @@ func TestRotateSession_RevokeOthersEnabled(t *testing.T) {
 		Session: &limen.Session{Token: currentSess.Token, UserID: user.ID},
 	}
 
-	_, newSess, err := p.rotateSession(req, w, validated)
+	newSess, err := p.rotateSession(req, w, validated)
 	require.NoError(t, err)
 	assert.NotEqual(t, currentSess.Token, newSess.Token)
 
@@ -97,7 +97,7 @@ func TestRotateSession_RevokeOthersDisabled_KeepsOtherSessions(t *testing.T) {
 		Session: &limen.Session{Token: currentSess.Token, UserID: user.ID},
 	}
 
-	_, newSess, err := p.rotateSession(req, w, validated)
+	newSess, err := p.rotateSession(req, w, validated)
 	require.NoError(t, err)
 
 	_, err = l.GetSession(requestWithToken(t, currentSess))

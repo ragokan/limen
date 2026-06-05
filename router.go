@@ -68,12 +68,30 @@ type router struct {
 	afterHooks       []Hook
 	responder        *Responder // For final response writing after hooks
 	maxBodyBytes     int64
+	routes           []*route
 }
 
 type RouteMetadata struct {
 	AllowedContentTypes []string
+	OperationID         string
+	Summary             string
+	Description         string
+	Tags                []string
+	AuthRequired        bool
+	Deprecated          bool
+	Parameters          []OpenAPIParameter
+	RequestBody         *OpenAPIRequestBody
+	Responses           map[int]OpenAPIResponse
+	Security            []OpenAPISecurityRequirement
 	// originalPattern is the original pattern of the route before any normalization or prefixing
 	originalPattern string
+}
+
+type RegisteredRoute struct {
+	Method   HTTPMethod
+	Pattern  string
+	RouteID  RouteID
+	Metadata *RouteMetadata
 }
 
 // route is a single registered route with its handler and metadata.
@@ -144,9 +162,23 @@ func (r *router) AddRoute(method HTTPMethod, pattern string, handler http.Handle
 		panic("unsupported HTTP method: " + string(method))
 	}
 	route.wrapped = r.buildRouteHandler(route)
+	r.routes = append(r.routes, route)
 
 	segments := r.splitPath(pattern)
 	r.insertRoute(route, segments)
+}
+
+func (r *router) Routes() []RegisteredRoute {
+	routes := make([]RegisteredRoute, len(r.routes))
+	for i, route := range r.routes {
+		routes[i] = RegisteredRoute{
+			Method:   route.Method,
+			Pattern:  route.Pattern,
+			RouteID:  route.RouteID,
+			Metadata: route.Metadata.clone(),
+		}
+	}
+	return routes
 }
 
 func methodIndexFor(method HTTPMethod) (int, bool) {
@@ -462,9 +494,7 @@ func (r *router) splitPath(pathStr string) []string {
 func (g *routerGroup) AddRoute(method HTTPMethod, pattern string, handler http.HandlerFunc, routeID RouteID, metadata *RouteMetadata, middleware ...Middleware) {
 	allMiddleware := slices.Concat(g.middleware, middleware)
 	fullPattern := g.prefix + normalizePath(pattern)
-	if metadata == nil {
-		metadata = &RouteMetadata{}
-	}
+	metadata = metadata.clone()
 	metadata.originalPattern = pattern
 	g.router.AddRoute(method, fullPattern, handler, routeID, metadata, allMiddleware...)
 }

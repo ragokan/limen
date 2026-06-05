@@ -13,7 +13,7 @@ import (
 	"github.com/ragokan/limen/plugins/oauth"
 )
 
-var twitterEndpoint = oauth2.Endpoint{
+var twitterEndpoint = oauth2.Endpoint{ // #nosec G101 -- Twitter OAuth endpoint URLs are public provider metadata, not credentials.
 	AuthURL:   "https://x.com/i/oauth2/authorize",
 	TokenURL:  "https://api.x.com/2/oauth2/token",
 	AuthStyle: oauth2.AuthStyleInHeader,

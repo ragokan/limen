@@ -11,10 +11,7 @@ func TestGenerateCreateTableIncludesOperationalIndexes(t *testing.T) {
 	t.Parallel()
 
 	schema := limen.NewDefaultSchemaConfig().Session.Introspect(limen.NewDefaultSchemaConfig()).(*limen.SchemaDefinition)
-	generator, err := newSQLMigrationGenerator(NewPostgresDriver(), &cliConfig{UseAutoIncrementID: true})
-	if err != nil {
-		t.Fatalf("newSQLMigrationGenerator: %v", err)
-	}
+	generator := newSQLMigrationGenerator(NewPostgresDriver(), &cliConfig{UseAutoIncrementID: true})
 
 	sql, err := generator.generateCreateTable(schema)
 	if err != nil {

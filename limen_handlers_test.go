@@ -2,11 +2,13 @@ package limen
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func newTestHandlersFromLimen(t *testing.T, l *Limen) *limenHandlers {
@@ -83,8 +85,52 @@ func TestListSessions(t *testing.T) {
 	handlers.ListSessions(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), sess1.Token)
-	assert.Contains(t, w.Body.String(), sess2.Token)
+	assert.NotContains(t, w.Body.String(), sess1.Token)
+	assert.NotContains(t, w.Body.String(), sess2.Token)
+	assert.NotContains(t, w.Body.String(), "token")
+	assert.NotContains(t, w.Body.String(), "refreshToken")
+	assert.NotContains(t, w.Body.String(), "accessToken")
+
+	var payload []map[string]any
+	require.NoError(t, json.NewDecoder(w.Body).Decode(&payload))
+	require.Len(t, payload, 2)
+	for _, item := range payload {
+		assert.NotContains(t, item, "token")
+		assert.NotContains(t, item, "refreshToken")
+		assert.NotContains(t, item, "accessToken")
+		assert.Contains(t, item, "user_id")
+	}
+}
+
+func TestRedactedSessionListDoesNotExposeCredentialMetadata(t *testing.T) {
+	t.Parallel()
+
+	items := redactedSessionList([]Session{{
+		ID:     "session-1",
+		Token:  "opaque-token",
+		UserID: "user-1",
+		Metadata: map[string]any{
+			"ip_address":   "127.0.0.1",
+			"user_agent":   "test-agent",
+			"token":        "metadata-token",
+			"refreshToken": "metadata-refresh-token",
+			"accessToken":  "metadata-access-token",
+		},
+	}})
+	payload, err := json.Marshal(items)
+	require.NoError(t, err)
+
+	body := string(payload)
+	assert.Contains(t, body, "ip_address")
+	assert.Contains(t, body, "user_agent")
+	assert.NotContains(t, body, "opaque-token")
+	assert.NotContains(t, body, "metadata-token")
+	assert.NotContains(t, body, "metadata-refresh-token")
+	assert.NotContains(t, body, "metadata-access-token")
+	assert.NotContains(t, body, "metadata")
+	assert.NotContains(t, body, "token")
+	assert.NotContains(t, body, "refreshToken")
+	assert.NotContains(t, body, "accessToken")
 }
 
 func TestSignOut(t *testing.T) {

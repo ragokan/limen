@@ -123,8 +123,10 @@ Run all non-example module tests:
 Run every module outside `go.work`, including examples:
 
 ```bash
-./scripts/test-standalone-modules.sh --all
+./scripts/test-standalone-modules.sh --all --local-replace
 ```
+
+Run without `--local-replace` only after release tags are published.
 
 Run benchmark suites and PostgreSQL 18 integration tests:
 
@@ -150,8 +152,15 @@ err := auth.CleanupExpired(ctx)
 Provider behavior, verified-email rules, and Instagram support status are
 documented in [OAuth Providers](docs/oauth-providers.md). PostgreSQL TTL and
 cleanup details are documented in [PostgreSQL Cleanup And TTL](docs/postgres-cleanup.md).
-Benchmarking is documented in [Benchmarking](docs/benchmarking.md). Production
-deployment guidance is documented in [Production Setup](docs/production.md).
+Benchmarking is documented in [Benchmarking](docs/benchmarking.md). OpenAPI and
+Huma integration are documented in [OpenAPI And Huma](docs/openapi.md).
+API keys are documented in [API Keys](docs/api-keys.md). Admin APIs are
+documented in [Admin Plugin](docs/admin.md). Organizations and RBAC are
+documented in [Organizations And RBAC](docs/organizations.md). Account and
+session management are documented in [Accounts And Sessions](docs/account-sessions.md).
+Longer-term passkey, SSO, and SCIM sequencing is documented in
+[Protocol Roadmap](docs/protocol-roadmap.md).
+Production deployment guidance is documented in [Production Setup](docs/production.md).
 Release/versioning rules are documented in [Releasing](docs/releasing.md).
 
 ## Contributing

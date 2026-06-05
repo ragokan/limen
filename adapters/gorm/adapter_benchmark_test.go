@@ -8,10 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ragokan/limen"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+
+	"github.com/ragokan/limen"
 )
 
 func setupBenchmarkGormDB(b *testing.B, rows int) *Adapter {

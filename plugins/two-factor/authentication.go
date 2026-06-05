@@ -74,7 +74,7 @@ func (t *twoFactorPlugin) DisableTwoFactor(ctx context.Context, userID any, pass
 		return err
 	}
 
-	if err = t.checkPassword(user, password); err != nil {
+	if err := t.checkPassword(user, password); err != nil {
 		return err
 	}
 
@@ -93,7 +93,7 @@ func (t *twoFactorPlugin) DisableTwoFactor(ctx context.Context, userID any, pass
 
 // rotateSession revokes the current session (and optionally all other sessions)
 // then immediately issues a new session for the same user so the client stays signed in.
-func (t *twoFactorPlugin) rotateSession(r *http.Request, w http.ResponseWriter, session *limen.ValidatedSession) (*limen.AuthenticationResult, *limen.SessionResult, error) {
+func (t *twoFactorPlugin) rotateSession(r *http.Request, w http.ResponseWriter, session *limen.ValidatedSession) (*limen.SessionResult, error) {
 	ctx := r.Context()
 
 	if t.config.revokeOtherSessionsOnStateChange {
@@ -105,10 +105,10 @@ func (t *twoFactorPlugin) rotateSession(r *http.Request, w http.ResponseWriter, 
 	authResult := &limen.AuthenticationResult{User: session.User}
 	sessionResult, err := t.core.CreateSession(ctx, r, w, authResult)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return authResult, sessionResult, nil
+	return sessionResult, nil
 }
 
 func (t *twoFactorPlugin) checkPassword(user *limen.User, password string) error {

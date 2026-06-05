@@ -12,6 +12,17 @@ import (
 	"github.com/ragokan/limen/plugins/oauth"
 )
 
+const (
+	googleIssuer             = "https://accounts.google.com"
+	googleScopeOpenID        = "openid"
+	googleScopeEmail         = "email"
+	googleScopeProfile       = "profile"
+	googleClaimEmail         = "email"
+	googleClaimEmailVerified = "email_verified"
+	googleClaimName          = "name"
+)
+
+// #nosec G101 -- Google OAuth endpoint URLs are public provider metadata, not credentials.
 var googleEndpoint = oauth2.Endpoint{
 	AuthURL:  "https://accounts.google.com/o/oauth2/v2/auth",
 	TokenURL: "https://oauth2.googleapis.com/token",
@@ -22,7 +33,7 @@ func New(opts ...ConfigOption) oauth.Provider {
 	cfg := &config{
 		clientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		clientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-		scopes:       []string{"openid", "email", "profile"},
+		scopes:       []string{googleScopeOpenID, googleScopeEmail, googleScopeProfile},
 	}
 	for _, opt := range opts {
 		opt(cfg)
@@ -38,10 +49,10 @@ type googleProvider struct {
 func newGoogleProvider(cfg *config) *googleProvider {
 	scopes := cfg.scopes
 	if len(scopes) == 0 {
-		scopes = []string{"openid", "email", "profile"}
+		scopes = []string{googleScopeOpenID, googleScopeEmail, googleScopeProfile}
 	}
 	if cfg.verifyIDToken == nil {
-		cfg.verifyIDToken = oauth.NewIDTokenVerifier("https://accounts.google.com", cfg.clientID)
+		cfg.verifyIDToken = oauth.NewIDTokenVerifier(googleIssuer, cfg.clientID)
 	}
 	config := &oauth2.Config{
 		ClientID:     cfg.clientID,
@@ -86,12 +97,12 @@ func (g *googleProvider) GetUserInfo(ctx context.Context, token *oauth.TokenResp
 	if sub == "" {
 		return nil, errors.New("google: id token missing sub claim")
 	}
-	email, _ := claims["email"].(string)
+	email, _ := claims[googleClaimEmail].(string)
 	if email == "" {
 		return nil, errors.New("google: id token missing email claim")
 	}
-	emailVerified, _ := claims["email_verified"].(bool)
-	name, _ := claims["name"].(string)
+	emailVerified, _ := claims[googleClaimEmailVerified].(bool)
+	name, _ := claims[googleClaimName].(string)
 	picture, _ := claims["picture"].(string)
 
 	return &oauth.ProviderUserInfo{
