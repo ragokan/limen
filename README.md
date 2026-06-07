@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://ragokan.github.io/limen/">
+  <a href="https://ragokan.github.io/limen/docs/">
     <img src="./banner.svg" alt="Limen — Composable authentication for Go" width="640" />
   </a>
 </p>
@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://ragokan.github.io/limen/">Documentation</a>
+  <a href="https://ragokan.github.io/limen/docs/">Documentation</a>
   ·
   <a href="https://github.com/ragokan/limen/issues">Issues</a>
   ·
@@ -18,7 +18,7 @@
 
 <p align="center">
   <a href="https://pkg.go.dev/github.com/ragokan/limen"><img src="https://img.shields.io/badge/reference-pkg.go.dev-ffffff?style=flat&colorA=000000&colorB=000000&logo=go&logoColor=white" alt="Go reference" /></a>
-  <a href="https://github.com/ragokan/limen/stargazers"><img src="https://img.shields.io/github/stars/thecodearcher/limen?style=flat&colorA=000000&colorB=000000&logo=github" alt="GitHub stars" /></a>
+  <a href="https://github.com/ragokan/limen/stargazers"><img src="https://img.shields.io/github/stars/ragokan/limen?style=flat&colorA=000000&colorB=000000&logo=github" alt="GitHub stars" /></a>
 
 </p>
 
@@ -38,7 +38,7 @@ Bring your own database, bring your own framework — Limen adapts to your stack
 
 ## Documentation
 
-Full guides, configuration reference, and plugin documentation are available at **[ragokan.github.io/limen](https://ragokan.github.io/limen/)**.
+Full guides, configuration reference, and plugin documentation are available at **[ragokan.github.io/limen/docs](https://ragokan.github.io/limen/docs/)**.
 
 ## Requirements
 
@@ -107,7 +107,7 @@ Alternatively, set the `LIMEN_SECRET` environment variable and omit the `Secret`
 
 For a more complete example with OAuth providers, two-factor auth, and Gin integration, see the [examples](examples/).
 
-For full configuration options, usage, and plugin APIs, visit **[ragokan.github.io/limen](https://ragokan.github.io/limen/)**.
+For full configuration options, usage, and plugin APIs, visit **[ragokan.github.io/limen/docs](https://ragokan.github.io/limen/docs/)**.
 
 ## Development
 

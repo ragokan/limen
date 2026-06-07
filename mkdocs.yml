@@ -13,17 +13,42 @@ theme:
 
 nav:
   - Home: index.md
-  - Core:
+  - Documentation:
+      - Overview: docs/index.md
+      - Getting Started:
+          - Installation: docs/installation.md
+          - Basic Usage: docs/basic-usage.md
+      - Core Concepts:
+          - CLI: docs/concepts/cli.md
+          - UUIDv7 IDs: docs/concepts/uuid-ids.md
+          - Database Schema: docs/concepts/database-schema.md
+          - OpenAPI: docs/concepts/openapi.md
+      - Authentication:
+          - Credential Password: docs/authentication/credential-password.md
+          - OAuth: docs/authentication/oauth.md
+          - Magic Link: docs/authentication/magic-link.md
+          - Two-Factor: docs/authentication/two-factor.md
+          - Session JWT: docs/authentication/session-jwt.md
+      - Configuration:
+          - Sessions: docs/configuration/sessions.md
+          - HTTP And Cookies: docs/configuration/http-cookies.md
+          - Rate Limiting: docs/configuration/rate-limiting.md
+          - Email Verification: docs/configuration/email-verification.md
+          - Cleanup: docs/configuration/cleanup.md
+      - Databases:
+          - SQL Adapter: docs/databases/sql.md
+          - GORM Adapter: docs/databases/gorm.md
+      - Frameworks:
+          - Gin: docs/frameworks/gin.md
+  - Reference:
       - Accounts And Sessions: account-sessions.md
       - Production Setup: production.md
       - PostgreSQL Cleanup And TTL: postgres-cleanup.md
       - OpenAPI And Huma: openapi.md
-  - Plugins:
       - OAuth Providers: oauth-providers.md
       - API Keys: api-keys.md
       - Admin Plugin: admin.md
       - Organizations And RBAC: organizations.md
-  - Operations:
       - Benchmarking: benchmarking.md
       - Releasing: releasing.md
       - Protocol Roadmap: protocol-roadmap.md
