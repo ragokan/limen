@@ -3,9 +3,9 @@ module example/adapters-gorm
 go 1.25.0
 
 require (
-	github.com/ragokan/limen v0.1.7
-	github.com/ragokan/limen/adapters/gorm v0.1.7
-	github.com/ragokan/limen/plugins/credential-password v0.1.7
+	github.com/ragokan/limen v0.1.8
+	github.com/ragokan/limen/adapters/gorm v0.1.8
+	github.com/ragokan/limen/plugins/credential-password v0.1.8
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.30.1
 )

@@ -3,7 +3,7 @@ module github.com/ragokan/limen/plugins/organization
 go 1.25.0
 
 require (
-	github.com/ragokan/limen v0.1.7
+	github.com/ragokan/limen v0.1.8
 	github.com/stretchr/testify v1.11.1
 )
 

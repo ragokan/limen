@@ -16,6 +16,11 @@ func WithSchemaIDGenerator(generator IDGenerator) SchemaConfigOption {
 	}
 }
 
+// WithSchemaUUIDv7IDs configures all schema ID fields to use app-generated UUIDv7 IDs.
+func WithSchemaUUIDv7IDs() SchemaConfigOption {
+	return WithSchemaIDGenerator(NewUUIDv7IDGenerator())
+}
+
 // WithSchemaAccount sets the account schema configuration
 func WithSchemaAccount(opts ...SchemaConfigAccountOption) SchemaConfigOption {
 	return func(c *SchemaConfig) {
