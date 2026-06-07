@@ -23,7 +23,7 @@ Examples are not tagged.
 
 ## Local Release Flow
 
-1. Update [VERSION](../VERSION) and internal `github.com/ragokan/limen...`
+1. Update [VERSION](https://github.com/ragokan/limen/blob/main/VERSION) and internal `github.com/ragokan/limen...`
    requirements to the release version.
 2. For performance-sensitive releases, refresh benchmarks from a clean
    worktree:

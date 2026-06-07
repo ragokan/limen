@@ -1,7 +1,7 @@
 # Benchmarking
 
 Limen keeps repeatable benchmark commands and raw snapshots under
-[benchmarks](../benchmarks/).
+[benchmarks](https://github.com/ragokan/limen/tree/main/benchmarks).
 
 ## Local Benchmarks
 
@@ -37,11 +37,11 @@ gh workflow run benchmarks.yml --repo ragokan/limen --ref main
 
 The checked-in snapshots are historical records, not release-wide guarantees.
 
-- [micro-optimizations summary](../benchmarks/results/micro-optimizations-summary.md)
+- [micro-optimizations summary](https://github.com/ragokan/limen/blob/main/benchmarks/results/micro-optimizations-summary.md)
   records the optimization branch comparison.
-- [next-steps summary](../benchmarks/results/next-steps-summary.md) records the
+- [next-steps summary](https://github.com/ragokan/limen/blob/main/benchmarks/results/next-steps-summary.md) records the
   PostgreSQL 18 smoke run for the benchmark harness.
-- [CI benchmark snapshot 26961254493](../benchmarks/results/ci-26961254493-summary.md)
+- [CI benchmark snapshot 26961254493](https://github.com/ragokan/limen/blob/main/benchmarks/results/ci-26961254493-summary.md)
   records the GitHub Actions benchmark workflow verification run.
 
 The PostgreSQL smoke snapshot used `BENCH_COUNT=1` and exists to prove the

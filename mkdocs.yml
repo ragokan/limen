@@ -1,0 +1,36 @@
+site_name: Limen
+site_description: Composable authentication for Go
+site_url: https://ragokan.github.io/limen/
+repo_url: https://github.com/ragokan/limen
+repo_name: ragokan/limen
+edit_uri: edit/main/docs/
+
+docs_dir: docs
+
+theme:
+  name: readthedocs
+  highlightjs: true
+
+nav:
+  - Home: index.md
+  - Core:
+      - Accounts And Sessions: account-sessions.md
+      - Production Setup: production.md
+      - PostgreSQL Cleanup And TTL: postgres-cleanup.md
+      - OpenAPI And Huma: openapi.md
+  - Plugins:
+      - OAuth Providers: oauth-providers.md
+      - API Keys: api-keys.md
+      - Admin Plugin: admin.md
+      - Organizations And RBAC: organizations.md
+  - Operations:
+      - Benchmarking: benchmarking.md
+      - Releasing: releasing.md
+      - Protocol Roadmap: protocol-roadmap.md
+
+markdown_extensions:
+  - admonition
+  - fenced_code
+  - tables
+  - toc:
+      permalink: true

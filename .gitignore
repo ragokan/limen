@@ -9,3 +9,4 @@ tmp/
 .env
 limen-publish
 examples/kitchen/
+site/

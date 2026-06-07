@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://limenauth.dev">
+  <a href="https://ragokan.github.io/limen/">
     <img src="./banner.svg" alt="Limen — Composable authentication for Go" width="640" />
   </a>
 </p>
@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://limenauth.dev">Documentation</a>
+  <a href="https://ragokan.github.io/limen/">Documentation</a>
   ·
   <a href="https://github.com/ragokan/limen/issues">Issues</a>
   ·
@@ -38,7 +38,7 @@ Bring your own database, bring your own framework — Limen adapts to your stack
 
 ## Documentation
 
-Full guides, configuration reference, and plugin documentation are available at **[limenauth.dev](https://limenauth.dev)**.
+Full guides, configuration reference, and plugin documentation are available at **[ragokan.github.io/limen](https://ragokan.github.io/limen/)**.
 
 ## Requirements
 
@@ -107,7 +107,7 @@ Alternatively, set the `LIMEN_SECRET` environment variable and omit the `Secret`
 
 For a more complete example with OAuth providers, two-factor auth, and Gin integration, see the [examples](examples/).
 
-For full configuration options, usage, and plugin APIs, visit **[limenauth.dev](https://limenauth.dev)**.
+For full configuration options, usage, and plugin APIs, visit **[ragokan.github.io/limen](https://ragokan.github.io/limen/)**.
 
 ## Development
 
