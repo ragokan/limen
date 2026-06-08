@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
 
@@ -95,9 +96,15 @@ func TestOpenAPIIncludesCoreAndPluginRoutes(t *testing.T) {
 
 	me := requireOperation(t, doc, "/api/auth/me", "get")
 	assert.Equal(t, "me", me.OperationID)
+	assert.Equal(t, []string{OpenAPIAuthTag}, me.Tags)
 	require.Len(t, me.Security, 1)
 	assert.Contains(t, me.Security[0], openAPISessionCookieScheme)
+	assertResponseSchemaRef(t, me, http.StatusOK, OpenAPIAuthSessionResponseSchema)
 	assert.Equal(t, "apiKey", doc.Components.SecuritySchemes[openAPISessionCookieScheme].Type)
+	require.Contains(t, doc.Components.Schemas, OpenAPIAuthSessionResponseSchema)
+	require.Contains(t, doc.Components.Schemas, OpenAPIAuthUserSchema)
+	require.Contains(t, doc.Components.Schemas, OpenAPIAuthSessionListResponseSchema)
+	assert.NotContains(t, doc.Components.Schemas, OpenAPIAuthCredentialSignInRequestSchema)
 
 	signout := requireOperation(t, doc, "/api/auth/signout", "post")
 	assert.Equal(t, "No Content", signout.Responses["204"].Description)
@@ -268,4 +275,14 @@ func assertParameter(t *testing.T, parameters []OpenAPIParameter, in string, nam
 		}
 	}
 	t.Fatalf("missing OpenAPI parameter %s:%s", in, name)
+}
+
+func assertResponseSchemaRef(t *testing.T, operation OpenAPIOperation, status int, schemaName string) {
+	t.Helper()
+
+	response, ok := operation.Responses[strconv.Itoa(status)]
+	require.True(t, ok, "missing OpenAPI response %d", status)
+	media, ok := response.Content[defaultOpenAPIContentType]
+	require.True(t, ok, "missing JSON response content")
+	assert.Equal(t, OpenAPIRefSchema(schemaName), media.Schema)
 }

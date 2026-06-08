@@ -39,8 +39,14 @@ func newLimenHandlers(httpCore *LimenHTTPCore, core *LimenCore) *limenHandlers {
 }
 
 func (h *limenHandlers) RegisterRoutes(routeBuilder *RouteBuilder) {
-	routeBuilder.ProtectedGETWithMetadata("/me", "me", h.GetSession, coreRouteMetadata("Get current session"))
-	routeBuilder.ProtectedGETWithMetadata("/sessions", "list-sessions", h.ListSessions, coreRouteMetadata("List sessions"))
+	routeBuilder.ProtectedGETWithMetadata("/me", "me", h.GetSession, coreRouteMetadata(
+		"Get current session",
+		WithRouteResponse(http.StatusOK, OpenAPIJSONResponse("Current session", OpenAPIRefSchema(OpenAPIAuthSessionResponseSchema))),
+	))
+	routeBuilder.ProtectedGETWithMetadata("/sessions", "list-sessions", h.ListSessions, coreRouteMetadata(
+		"List sessions",
+		WithRouteResponse(http.StatusOK, OpenAPIJSONResponse("Sessions", OpenAPIRefSchema(OpenAPIAuthSessionListResponseSchema))),
+	))
 	routeBuilder.ProtectedPOSTWithMetadata("/signout", "signout", h.SignOut, coreRouteMetadata(
 		"Sign out",
 		WithRouteResponse(http.StatusNoContent, OpenAPIResponse{Description: "No Content"}),
@@ -54,10 +60,12 @@ func (h *limenHandlers) RegisterRoutes(routeBuilder *RouteBuilder) {
 		routeBuilder.POSTWithMetadata("/verify-email", "verify-email", h.VerifyEmail, coreRouteMetadata(
 			"Verify email",
 			WithRouteAllowedContentTypes("application/json"),
+			WithRouteRequestBody(OpenAPIJSONRequestBody(OpenAPIRefSchema(OpenAPIAuthVerifyEmailRequestSchema))),
+			WithRouteResponse(http.StatusOK, OpenAPIJSONResponse("Email verified", OpenAPIRefSchema(OpenAPIAuthMessageResponseSchema))),
 		))
 		routeBuilder.ProtectedPOSTWithMetadata("/email-verifications", "email-verifications", h.RequestEmailVerification, coreRouteMetadata(
 			"Request email verification",
-			WithRouteAllowedContentTypes("application/json"),
+			WithRouteResponse(http.StatusOK, OpenAPIJSONResponse("Email verification requested", OpenAPIRefSchema(OpenAPIAuthMessageResponseSchema))),
 		))
 	}
 }
@@ -65,7 +73,7 @@ func (h *limenHandlers) RegisterRoutes(routeBuilder *RouteBuilder) {
 func coreRouteMetadata(summary string, opts ...RouteMetadataOption) *RouteMetadata {
 	options := []RouteMetadataOption{
 		WithRouteSummary(summary),
-		WithRouteTags("auth"),
+		WithRouteTags(OpenAPIAuthTag),
 	}
 	options = append(options, opts...)
 	return NewRouteMetadata(options...)

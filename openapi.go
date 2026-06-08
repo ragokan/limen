@@ -18,12 +18,33 @@ const (
 	defaultOpenAPIContentType  = "application/json"
 )
 
+const (
+	OpenAPIAuthTag = "Auth"
+
+	OpenAPIAuthUserSchema                         = "AuthUser"
+	OpenAPIAuthSessionResponseSchema              = "AuthSessionResponse"
+	OpenAPIAuthSessionListItemSchema              = "AuthSessionListItem"
+	OpenAPIAuthSessionListResponseSchema          = "AuthSessionListResponse"
+	OpenAPIAuthMessageResponseSchema              = "AuthMessageResponse"
+	OpenAPIAuthVerifyEmailRequestSchema           = "AuthVerifyEmailRequest"
+	OpenAPIAuthRefreshRequestSchema               = "AuthRefreshRequest"
+	OpenAPIAuthCredentialSignInRequestSchema      = "AuthCredentialSignInRequest"
+	OpenAPIAuthCredentialSignUpRequestSchema      = "AuthCredentialSignUpRequest"
+	OpenAPIAuthPasswordResetEmailRequestSchema    = "AuthPasswordResetEmailRequest"
+	OpenAPIAuthPasswordResetRequestSchema         = "AuthPasswordResetRequest"
+	OpenAPIAuthPasswordChangeRequestSchema        = "AuthPasswordChangeRequest"
+	OpenAPIAuthPasswordSetRequestSchema           = "AuthPasswordSetRequest"
+	OpenAPIAuthUsernameCheckRequestSchema         = "AuthUsernameCheckRequest"
+	OpenAPIAuthUsernameAvailabilityResponseSchema = "AuthUsernameAvailabilityResponse"
+)
+
 type OpenAPIConfig struct {
 	Title           string
 	Version         string
 	Description     string
 	Servers         []OpenAPIServer
 	SecuritySchemes map[string]OpenAPISecurityScheme
+	Schemas         map[string]OpenAPISchema
 }
 
 type OpenAPIOption func(*OpenAPIConfig)
@@ -49,6 +70,7 @@ type OpenAPIServer struct {
 
 type OpenAPIComponents struct {
 	SecuritySchemes map[string]OpenAPISecurityScheme `json:"securitySchemes,omitempty"`
+	Schemas         map[string]OpenAPISchema         `json:"schemas,omitempty"`
 }
 
 type OpenAPISecurityScheme struct {
@@ -135,8 +157,32 @@ func WithOpenAPISecurityScheme(name string, scheme OpenAPISecurityScheme) OpenAP
 	}
 }
 
+func WithOpenAPISchema(name string, schema OpenAPISchema) OpenAPIOption {
+	return func(c *OpenAPIConfig) {
+		if c.Schemas == nil {
+			c.Schemas = make(map[string]OpenAPISchema)
+		}
+		c.Schemas[name] = schema
+	}
+}
+
 func OpenAPIStringSchema() OpenAPISchema {
 	return OpenAPISchema{"type": "string"}
+}
+
+func OpenAPIBooleanSchema() OpenAPISchema {
+	return OpenAPISchema{"type": "boolean"}
+}
+
+func OpenAPIArraySchema(items OpenAPISchema) OpenAPISchema {
+	return OpenAPISchema{
+		"type":  "array",
+		"items": items,
+	}
+}
+
+func OpenAPIRefSchema(name string) OpenAPISchema {
+	return OpenAPISchema{"$ref": "#/components/schemas/" + name}
 }
 
 func OpenAPIObjectSchema(properties map[string]OpenAPISchema, required ...string) OpenAPISchema {
@@ -148,6 +194,24 @@ func OpenAPIObjectSchema(properties map[string]OpenAPISchema, required ...string
 		schema["required"] = required
 	}
 	return schema
+}
+
+func OpenAPIJSONRequestBody(schema OpenAPISchema) *OpenAPIRequestBody {
+	return &OpenAPIRequestBody{
+		Required: true,
+		Content: map[string]OpenAPIMediaType{
+			defaultOpenAPIContentType: {Schema: schema},
+		},
+	}
+}
+
+func OpenAPIJSONResponse(description string, schema OpenAPISchema) OpenAPIResponse {
+	return OpenAPIResponse{
+		Description: description,
+		Content: map[string]OpenAPIMediaType{
+			defaultOpenAPIContentType: {Schema: schema},
+		},
+	}
 }
 
 func (a *Limen) OpenAPI(opts ...OpenAPIOption) *OpenAPIDocument {
@@ -179,23 +243,29 @@ func (a *Limen) defaultOpenAPIConfig() *OpenAPIConfig {
 		Title:           defaultOpenAPITitle,
 		Version:         defaultOpenAPIDocumentVer,
 		SecuritySchemes: make(map[string]OpenAPISecurityScheme),
+		Schemas:         defaultOpenAPIAuthSchemas(),
 	}
 	if a != nil && a.core != nil {
+		_, sessionJWTEnabled := a.core.GetPlugin(PluginSessionJWT)
 		if a.core.baseURL != "" {
 			config.Servers = []OpenAPIServer{{URL: a.core.baseURL}}
 		}
-		if a.core.config != nil && a.core.config.HTTP != nil && a.core.config.HTTP.cookieConfig != nil {
+		if a.core.config != nil && a.core.config.HTTP != nil && a.core.config.HTTP.cookieConfig != nil && !sessionJWTEnabled {
 			config.SecuritySchemes[openAPISessionCookieScheme] = OpenAPISecurityScheme{
 				Type: "apiKey",
 				In:   "cookie",
 				Name: a.core.config.HTTP.cookieConfig.sessionCookieName,
 			}
 		}
-		if a.core.config != nil && a.core.config.Session != nil && a.core.config.Session.BearerEnabled {
+		if (a.core.config != nil && a.core.config.Session != nil && a.core.config.Session.BearerEnabled) || sessionJWTEnabled {
+			bearerFormat := "opaque"
+			if sessionJWTEnabled {
+				bearerFormat = "JWT"
+			}
 			config.SecuritySchemes[openAPIBearerSessionScheme] = OpenAPISecurityScheme{
 				Type:         "http",
 				Scheme:       "bearer",
-				BearerFormat: "opaque",
+				BearerFormat: bearerFormat,
 			}
 		}
 	}
@@ -203,6 +273,10 @@ func (a *Limen) defaultOpenAPIConfig() *OpenAPIConfig {
 }
 
 func buildOpenAPIDocument(config *OpenAPIConfig, routes []RegisteredRoute) *OpenAPIDocument {
+	if config == nil {
+		config = &OpenAPIConfig{}
+	}
+
 	document := &OpenAPIDocument{
 		OpenAPI: openAPIVersion,
 		Info: OpenAPIInfo{
@@ -230,6 +304,7 @@ func buildOpenAPIDocument(config *OpenAPIConfig, routes []RegisteredRoute) *Open
 		document.Paths[openAPIPath][method] = openAPIOperationForRoute(config, route, pathParameters)
 	}
 
+	document.Components.Schemas = referencedOpenAPIComponentSchemas(config.Schemas, document)
 	return document
 }
 
@@ -257,7 +332,7 @@ func openAPIOperationForRoute(config *OpenAPIConfig, route RegisteredRoute, path
 
 	tags := append([]string(nil), metadata.Tags...)
 	if len(tags) == 0 {
-		tags = []string{"auth"}
+		tags = []string{OpenAPIAuthTag}
 	}
 
 	return OpenAPIOperation{
@@ -271,6 +346,173 @@ func openAPIOperationForRoute(config *OpenAPIConfig, route RegisteredRoute, path
 		Responses:   responses,
 		Security:    security,
 	}
+}
+
+func defaultOpenAPIAuthSchemas() map[string]OpenAPISchema {
+	dateTime := openAPIStringFormatSchema("date-time")
+	email := openAPIStringFormatSchema("email")
+
+	return map[string]OpenAPISchema{
+		OpenAPIAuthUserSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
+			"id": OpenAPISchema{
+				"type":        "string",
+				"description": "User identifier.",
+			},
+			"email":             email,
+			"email_verified_at": dateTime,
+		}, "email"),
+		OpenAPIAuthSessionResponseSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
+			"user": OpenAPIRefSchema(OpenAPIAuthUserSchema),
+		}, "user"),
+		OpenAPIAuthSessionListItemSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
+			"id": OpenAPISchema{
+				"type":        "string",
+				"description": "Session identifier.",
+			},
+			"user_id":     OpenAPIStringSchema(),
+			"created_at":  dateTime,
+			"expires_at":  dateTime,
+			"last_access": dateTime,
+			"ip_address":  OpenAPIStringSchema(),
+			"user_agent":  OpenAPIStringSchema(),
+		}, "user_id", "created_at", "expires_at", "last_access"),
+		OpenAPIAuthSessionListResponseSchema: OpenAPIArraySchema(OpenAPIRefSchema(OpenAPIAuthSessionListItemSchema)),
+		OpenAPIAuthMessageResponseSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
+			"message": OpenAPIStringSchema(),
+		}, "message"),
+		OpenAPIAuthVerifyEmailRequestSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
+			"token": OpenAPIStringSchema(),
+		}, "token"),
+		OpenAPIAuthRefreshRequestSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
+			"refreshToken": OpenAPIStringSchema(),
+		}, "refreshToken"),
+		OpenAPIAuthCredentialSignInRequestSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
+			"credential":  OpenAPIStringSchema(),
+			"password":    OpenAPIStringSchema(),
+			"remember_me": OpenAPIBooleanSchema(),
+		}, "credential", "password"),
+		OpenAPIAuthCredentialSignUpRequestSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
+			"email":    email,
+			"username": OpenAPIStringSchema(),
+			"password": OpenAPIStringSchema(),
+		}, "email", "password"),
+		OpenAPIAuthPasswordResetEmailRequestSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
+			"email": email,
+		}, "email"),
+		OpenAPIAuthPasswordResetRequestSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
+			"token":        OpenAPIStringSchema(),
+			"new_password": OpenAPIStringSchema(),
+		}, "token", "new_password"),
+		OpenAPIAuthPasswordChangeRequestSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
+			"current_password":      OpenAPIStringSchema(),
+			"new_password":          OpenAPIStringSchema(),
+			"revoke_other_sessions": OpenAPIBooleanSchema(),
+		}, "current_password", "new_password"),
+		OpenAPIAuthPasswordSetRequestSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
+			"new_password":          OpenAPIStringSchema(),
+			"revoke_other_sessions": OpenAPIBooleanSchema(),
+		}, "new_password"),
+		OpenAPIAuthUsernameCheckRequestSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
+			"username": OpenAPIStringSchema(),
+		}, "username"),
+		OpenAPIAuthUsernameAvailabilityResponseSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
+			"available": OpenAPIBooleanSchema(),
+		}, "available"),
+	}
+}
+
+func openAPIStringFormatSchema(format string) OpenAPISchema {
+	schema := OpenAPIStringSchema()
+	schema["format"] = format
+	return schema
+}
+
+func referencedOpenAPIComponentSchemas(catalog map[string]OpenAPISchema, document *OpenAPIDocument) map[string]OpenAPISchema {
+	if len(catalog) == 0 || document == nil {
+		return nil
+	}
+
+	refs := make(map[string]struct{})
+	for _, path := range document.Paths {
+		for _, operation := range path {
+			for _, parameter := range operation.Parameters {
+				collectOpenAPISchemaRefs(parameter.Schema, refs)
+			}
+			if operation.RequestBody != nil {
+				for _, media := range operation.RequestBody.Content {
+					collectOpenAPISchemaRefs(media.Schema, refs)
+				}
+			}
+			for _, response := range operation.Responses {
+				for _, media := range response.Content {
+					collectOpenAPISchemaRefs(media.Schema, refs)
+				}
+			}
+		}
+	}
+
+	out := make(map[string]OpenAPISchema)
+	for {
+		added := false
+		for name := range refs {
+			if _, exists := out[name]; exists {
+				continue
+			}
+			schema, exists := catalog[name]
+			if !exists {
+				continue
+			}
+			out[name] = schema
+			collectOpenAPISchemaRefs(schema, refs)
+			added = true
+		}
+		if !added {
+			break
+		}
+	}
+
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
+func collectOpenAPISchemaRefs(value any, refs map[string]struct{}) {
+	switch typed := value.(type) {
+	case nil:
+		return
+	case OpenAPISchema:
+		if ref, ok := typed["$ref"].(string); ok {
+			if name := openAPIComponentNameFromRef(ref); name != "" {
+				refs[name] = struct{}{}
+			}
+		}
+		for _, nested := range typed {
+			collectOpenAPISchemaRefs(nested, refs)
+		}
+	case map[string]OpenAPISchema:
+		for _, nested := range typed {
+			collectOpenAPISchemaRefs(nested, refs)
+		}
+	case map[string]any:
+		collectOpenAPISchemaRefs(OpenAPISchema(typed), refs)
+	case []OpenAPISchema:
+		for _, nested := range typed {
+			collectOpenAPISchemaRefs(nested, refs)
+		}
+	case []any:
+		for _, nested := range typed {
+			collectOpenAPISchemaRefs(nested, refs)
+		}
+	}
+}
+
+func openAPIComponentNameFromRef(ref string) string {
+	const prefix = "#/components/schemas/"
+	if !strings.HasPrefix(ref, prefix) {
+		return ""
+	}
+	return strings.TrimPrefix(ref, prefix)
 }
 
 func defaultOpenAPISecurityRequirements(config *OpenAPIConfig) []OpenAPISecurityRequirement {

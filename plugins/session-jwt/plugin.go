@@ -2,6 +2,7 @@ package sessionjwt
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -110,7 +111,13 @@ func (p *sessionJWTPlugin) RegisterRoutes(httpCore *limen.LimenHTTPCore, routeBu
 		return
 	}
 	handlers := newJWTHandlers(p, httpCore)
-	routeBuilder.POST("/refresh", "session-jwt-refresh", handlers.Refresh)
+	routeBuilder.POSTWithMetadata("/refresh", "session-jwt-refresh", handlers.Refresh, limen.NewRouteMetadata(
+		limen.WithRouteSummary("Refresh access token"),
+		limen.WithRouteTags(limen.OpenAPIAuthTag),
+		limen.WithRouteAllowedContentTypes("application/json"),
+		limen.WithRouteRequestBody(limen.OpenAPIJSONRequestBody(limen.OpenAPIRefSchema(limen.OpenAPIAuthRefreshRequestSchema))),
+		limen.WithRouteResponse(http.StatusOK, limen.OpenAPIJSONResponse("Access token refreshed", limen.OpenAPIRefSchema(limen.OpenAPIAuthSessionResponseSchema))),
+	))
 }
 
 func (p *sessionJWTPlugin) GetSchemas(schema *limen.SchemaConfig) []limen.SchemaIntrospector {

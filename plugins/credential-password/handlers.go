@@ -46,13 +46,60 @@ func (p *credentialPasswordPlugin) RegisterRoutes(httpCore *limen.LimenHTTPCore,
 }
 
 func routes(e *credentialPasswordHandlers) {
-	e.builder.POST("/signin/credential", "signin", e.SignInWithCredentialAndPassword)
-	e.builder.POST("/signup/credential", "signup", e.SignUpWithCredentialAndPassword)
-	e.builder.POST("/passwords/request-reset", "passwords-request-reset", e.RequestPasswordReset)
-	e.builder.POST("/passwords/reset", "passwords-reset", e.ResetPassword)
-	e.builder.ProtectedPOST("/passwords/change", "passwords-change", e.ChangePassword)
-	e.builder.ProtectedPUT("/passwords", "passwords-set", e.SetPassword)
-	e.builder.POST("/usernames/check", "usernames-check", e.CheckUsernameAvailability)
+	e.builder.POSTWithMetadata("/signin/credential", "signin", e.SignInWithCredentialAndPassword, authRouteMetadata(
+		"Sign in with credential and password",
+		limen.OpenAPIAuthCredentialSignInRequestSchema,
+		"Signed in",
+		limen.OpenAPIAuthSessionResponseSchema,
+	))
+	e.builder.POSTWithMetadata("/signup/credential", "signup", e.SignUpWithCredentialAndPassword, authRouteMetadata(
+		"Sign up with email and password",
+		limen.OpenAPIAuthCredentialSignUpRequestSchema,
+		"Signed up",
+		limen.OpenAPIAuthSessionResponseSchema,
+	))
+	e.builder.POSTWithMetadata("/passwords/request-reset", "passwords-request-reset", e.RequestPasswordReset, authRouteMetadata(
+		"Request password reset",
+		limen.OpenAPIAuthPasswordResetEmailRequestSchema,
+		"Password reset requested",
+		limen.OpenAPIAuthMessageResponseSchema,
+	))
+	e.builder.POSTWithMetadata("/passwords/reset", "passwords-reset", e.ResetPassword, authRouteMetadata(
+		"Reset password",
+		limen.OpenAPIAuthPasswordResetRequestSchema,
+		"Password reset",
+		limen.OpenAPIAuthMessageResponseSchema,
+	))
+	e.builder.ProtectedPOSTWithMetadata("/passwords/change", "passwords-change", e.ChangePassword, authRouteMetadata(
+		"Change password",
+		limen.OpenAPIAuthPasswordChangeRequestSchema,
+		"Password changed",
+		limen.OpenAPIAuthSessionResponseSchema,
+	))
+	e.builder.ProtectedPUTWithMetadata("/passwords", "passwords-set", e.SetPassword, authRouteMetadata(
+		"Set password",
+		limen.OpenAPIAuthPasswordSetRequestSchema,
+		"Password set",
+		limen.OpenAPIAuthSessionResponseSchema,
+	))
+	if e.plugin.config.enableUsername {
+		e.builder.POSTWithMetadata("/usernames/check", "usernames-check", e.CheckUsernameAvailability, authRouteMetadata(
+			"Check username availability",
+			limen.OpenAPIAuthUsernameCheckRequestSchema,
+			"Username availability",
+			limen.OpenAPIAuthUsernameAvailabilityResponseSchema,
+		))
+	}
+}
+
+func authRouteMetadata(summary string, requestSchema string, responseDescription string, responseSchema string) *limen.RouteMetadata {
+	return limen.NewRouteMetadata(
+		limen.WithRouteSummary(summary),
+		limen.WithRouteTags(limen.OpenAPIAuthTag),
+		limen.WithRouteAllowedContentTypes("application/json"),
+		limen.WithRouteRequestBody(limen.OpenAPIJSONRequestBody(limen.OpenAPIRefSchema(requestSchema))),
+		limen.WithRouteResponse(http.StatusOK, limen.OpenAPIJSONResponse(responseDescription, limen.OpenAPIRefSchema(responseSchema))),
+	)
 }
 
 // SignInWithCredentialAndPassword handles user sign-in with either email or username (if enabled) and password.

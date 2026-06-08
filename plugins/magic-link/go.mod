@@ -3,7 +3,7 @@ module github.com/ragokan/limen/plugins/magic-link
 go 1.25.0
 
 require (
-	github.com/ragokan/limen v0.1.8
+	github.com/ragokan/limen v0.1.9
 	github.com/stretchr/testify v1.11.1
 )
 

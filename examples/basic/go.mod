@@ -4,9 +4,9 @@ go 1.25.0
 
 require (
 	github.com/lib/pq v1.10.9
-	github.com/ragokan/limen v0.1.8
-	github.com/ragokan/limen/adapters/sql v0.1.8
-	github.com/ragokan/limen/plugins/credential-password v0.1.8
+	github.com/ragokan/limen v0.1.9
+	github.com/ragokan/limen/adapters/sql v0.1.9
+	github.com/ragokan/limen/plugins/credential-password v0.1.9
 )
 
 require (

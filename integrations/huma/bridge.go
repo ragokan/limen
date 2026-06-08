@@ -2,6 +2,7 @@ package limenhuma
 
 import (
 	"fmt"
+	"net/http"
 	"reflect"
 	"strings"
 
@@ -37,12 +38,71 @@ func MergeDocument(target *huma.OpenAPI, source *limen.OpenAPIDocument) (err err
 	if err := validateOperationConflicts(target, source.Paths); err != nil {
 		return err
 	}
+	if err := validateOperationIDConflicts(target, source.Paths); err != nil {
+		return err
+	}
 	if err := mergeSecuritySchemes(target, source.Components.SecuritySchemes); err != nil {
+		return err
+	}
+	if err := mergeSchemas(target, source.Components.Schemas); err != nil {
 		return err
 	}
 	for path, pathItem := range source.Paths {
 		for method, operation := range pathItem {
-			target.AddOperation(toHumaOperation(path, method, operation))
+			addHumaOperation(target, toHumaOperation(path, method, operation))
+		}
+	}
+	return nil
+}
+
+func mergeSchemas(target *huma.OpenAPI, schemas map[string]limen.OpenAPISchema) error {
+	if len(schemas) == 0 {
+		return nil
+	}
+	if target.Components == nil {
+		target.Components = &huma.Components{}
+	}
+	if target.Components.Schemas == nil {
+		target.Components.Schemas = huma.NewMapRegistry("#/components/schemas/", huma.DefaultSchemaNamer)
+	}
+
+	targetSchemas := target.Components.Schemas.Map()
+	for name, schema := range schemas {
+		converted := toHumaSchema(schema)
+		if converted == nil {
+			converted = &huma.Schema{}
+		}
+		if existing, ok := targetSchemas[name]; ok && !reflect.DeepEqual(existing, converted) {
+			return fmt.Errorf("limenhuma: conflicting schema %q", name)
+		}
+		targetSchemas[name] = converted
+	}
+	return nil
+}
+
+func validateOperationIDConflicts(target *huma.OpenAPI, paths map[string]limen.OpenAPIPath) error {
+	seen := map[string]struct{}{}
+	if target != nil {
+		for _, pathItem := range target.Paths {
+			for _, op := range allHumaOperations(pathItem) {
+				if op == nil || op.OperationID == "" {
+					continue
+				}
+				seen[normalizeOperationID(op.OperationID)] = struct{}{}
+			}
+		}
+	}
+
+	for _, pathItem := range paths {
+		for _, op := range pathItem {
+			if op.OperationID == "" {
+				continue
+			}
+			operationID := normalizeOperationID(op.OperationID)
+			if _, ok := seen[operationID]; ok {
+				return fmt.Errorf("limenhuma: duplicate operation ID: %s", operationID)
+			}
+			seen[operationID] = struct{}{}
 		}
 	}
 	return nil
@@ -64,6 +124,16 @@ func validateOperationConflicts(target *huma.OpenAPI, paths map[string]limen.Ope
 		}
 	}
 	return nil
+}
+
+func allHumaOperations(pathItem *huma.PathItem) []*huma.Operation {
+	if pathItem == nil {
+		return nil
+	}
+	return []*huma.Operation{
+		pathItem.Get, pathItem.Post, pathItem.Put, pathItem.Patch,
+		pathItem.Delete, pathItem.Head, pathItem.Options, pathItem.Trace,
+	}
 }
 
 func humaOperationForMethod(pathItem *huma.PathItem, method string) *huma.Operation {
@@ -90,6 +160,44 @@ func humaOperationForMethod(pathItem *huma.PathItem, method string) *huma.Operat
 	default:
 		return nil
 	}
+}
+
+func addHumaOperation(target *huma.OpenAPI, operation *huma.Operation) {
+	if target.Paths == nil {
+		target.Paths = map[string]*huma.PathItem{}
+	}
+	operation.OperationID = normalizeOperationID(operation.OperationID)
+
+	item := target.Paths[operation.Path]
+	if item == nil {
+		item = &huma.PathItem{}
+		target.Paths[operation.Path] = item
+	}
+
+	switch operation.Method {
+	case http.MethodGet:
+		item.Get = operation
+	case http.MethodPost:
+		item.Post = operation
+	case http.MethodPut:
+		item.Put = operation
+	case http.MethodPatch:
+		item.Patch = operation
+	case http.MethodDelete:
+		item.Delete = operation
+	case http.MethodHead:
+		item.Head = operation
+	case http.MethodOptions:
+		item.Options = operation
+	case http.MethodTrace:
+		item.Trace = operation
+	default:
+		panic("unknown method " + operation.Method)
+	}
+}
+
+func normalizeOperationID(operationID string) string {
+	return strings.ReplaceAll(operationID, " ", "-")
 }
 
 func mergeSecuritySchemes(target *huma.OpenAPI, schemes map[string]limen.OpenAPISecurityScheme) error {
@@ -203,6 +311,10 @@ func toHumaSecurity(security []limen.OpenAPISecurityRequirement) []map[string][]
 	for _, requirement := range security {
 		item := make(map[string][]string, len(requirement))
 		for name, scopes := range requirement {
+			if len(scopes) == 0 {
+				item[name] = []string{}
+				continue
+			}
 			item[name] = append([]string(nil), scopes...)
 		}
 		out = append(out, item)

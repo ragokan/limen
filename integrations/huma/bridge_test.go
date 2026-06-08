@@ -77,8 +77,14 @@ func TestMergeAddsLimenSpecToHumaOpenAPI(t *testing.T) {
 	assert.Equal(t, "Created", op.Responses["201"].Description)
 	require.NotNil(t, api.OpenAPI().Components)
 	require.Contains(t, api.OpenAPI().Components.SecuritySchemes, "sessionCookie")
+	schemas := api.OpenAPI().Components.Schemas.Map()
+	require.Contains(t, schemas, limen.OpenAPIAuthSessionResponseSchema)
+	require.Contains(t, schemas, limen.OpenAPIAuthUserSchema)
+	assert.Equal(t, "#/components/schemas/"+limen.OpenAPIAuthUserSchema, schemas[limen.OpenAPIAuthSessionResponseSchema].Properties["user"].Ref)
 	require.Len(t, op.Security, 1)
 	assert.Contains(t, op.Security[0], "sessionCookie")
+	assert.NotNil(t, op.Security[0]["sessionCookie"])
+	assert.Empty(t, op.Security[0]["sessionCookie"])
 }
 
 func TestMergeReturnsDuplicateOperationError(t *testing.T) {
@@ -141,6 +147,19 @@ func TestMergeRejectsConflictingSecurityScheme(t *testing.T) {
 	err := Merge(api, auth)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "conflicting security scheme")
+}
+
+func TestMergeRejectsConflictingSchema(t *testing.T) {
+	t.Parallel()
+
+	auth, _ := limen.NewTestLimen(t, bridgeTestPlugin{})
+	mux := http.NewServeMux()
+	api := humago.New(mux, huma.DefaultConfig("Host API", "1.0.0"))
+	api.OpenAPI().Components.Schemas.Map()[limen.OpenAPIAuthUserSchema] = &huma.Schema{Type: "string"}
+
+	err := Merge(api, auth)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "conflicting schema")
 }
 
 func requireHumaOperation(t *testing.T, doc *huma.OpenAPI, path string, method string) *huma.Operation {
