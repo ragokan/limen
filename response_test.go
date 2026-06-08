@@ -1,12 +1,14 @@
 package limen
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func newTestResponder(t *testing.T) *Responder {
@@ -94,6 +96,64 @@ func TestResponder_Error_GenericError(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	assert.Contains(t, w.Body.String(), `"message":"generic error"`)
+}
+
+func TestResponder_SessionResponseIncludesTokensWhenReturnedToClient(t *testing.T) {
+	t.Parallel()
+
+	l := newTestLimenWithSessionConfig(t, WithBearerEnabled())
+	responder := newResponder(l.config.HTTP, l.core.cookies, true)
+
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/auth/signin", http.NoBody)
+	w := httptest.NewRecorder()
+
+	err := responder.SessionResponse(w, req, l.core, &AuthenticationResult{User: &User{
+		ID:    "user-1",
+		Email: "user@example.com",
+	}}, &SessionResult{
+		Token:        "auth-token",
+		RefreshToken: "refresh-token",
+	})
+
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var payload map[string]any
+	require.NoError(t, json.NewDecoder(w.Body).Decode(&payload))
+	require.Contains(t, payload, "user")
+	tokens, ok := payload["tokens"].(map[string]any)
+	require.True(t, ok)
+	assert.Equal(t, "auth-token", tokens["auth_token"])
+	assert.Equal(t, "refresh-token", tokens["refresh_token"])
+}
+
+func TestResponder_SessionResponseOmitsCookieOnlyTokenFromBody(t *testing.T) {
+	t.Parallel()
+
+	l := newTestLimen(t)
+	responder := newResponder(l.config.HTTP, l.core.cookies, false)
+
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/auth/signin", http.NoBody)
+	w := httptest.NewRecorder()
+
+	err := responder.SessionResponse(w, req, l.core, &AuthenticationResult{User: &User{
+		ID:    "user-1",
+		Email: "user@example.com",
+	}}, &SessionResult{
+		Token: "cookie-token",
+		Cookie: &http.Cookie{
+			Name:  "limen_session",
+			Value: "cookie-token",
+		},
+	})
+
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var payload map[string]any
+	require.NoError(t, json.NewDecoder(w.Body).Decode(&payload))
+	require.Contains(t, payload, "user")
+	assert.NotContains(t, payload, "tokens")
 }
 
 func TestToLimenError_LimenError(t *testing.T) {

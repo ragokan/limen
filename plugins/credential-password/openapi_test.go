@@ -23,6 +23,16 @@ func TestOpenAPIMetadata(t *testing.T) {
 	assert.Equal(t, []string{limen.OpenAPIAuthTag}, signIn.Tags)
 	assertOpenAPIRequestSchemaRef(t, signIn, limen.OpenAPIAuthCredentialSignInRequestSchema)
 	assertOpenAPIResponseSchemaRef(t, signIn, http.StatusOK, limen.OpenAPIAuthSessionResponseSchema)
+	assertOpenAPIResponseSchemaRef(t, signIn, http.StatusUnauthorized, limen.OpenAPIAuthErrorResponseSchema)
+	assertOpenAPIResponseSchemaRef(t, signIn, http.StatusUnprocessableEntity, limen.OpenAPIAuthErrorResponseSchema)
+
+	signUp := requireOpenAPIOperation(t, doc, "/auth/signup/credential", "post")
+	assert.Equal(t, "signup", signUp.OperationID)
+	assert.Equal(t, "Sign up with email and password", signUp.Summary)
+	assertOpenAPIRequestSchemaRef(t, signUp, limen.OpenAPIAuthCredentialSignUpRequestSchema)
+	assertOpenAPIResponseSchemaRef(t, signUp, http.StatusOK, limen.OpenAPIAuthSessionResponseSchema)
+	assertOpenAPIResponseSchemaRef(t, signUp, http.StatusConflict, limen.OpenAPIAuthErrorResponseSchema)
+	assertOpenAPIResponseSchemaRef(t, signUp, http.StatusUnprocessableEntity, limen.OpenAPIAuthErrorResponseSchema)
 
 	setPassword := requireOpenAPIOperation(t, doc, "/auth/passwords", "put")
 	assert.Equal(t, "Set password", setPassword.Summary)
@@ -37,7 +47,10 @@ func TestOpenAPIMetadata(t *testing.T) {
 	assertOpenAPIResponseSchemaRef(t, usernameCheck, http.StatusOK, limen.OpenAPIAuthUsernameAvailabilityResponseSchema)
 
 	require.Contains(t, doc.Components.Schemas, limen.OpenAPIAuthCredentialSignInRequestSchema)
+	require.Contains(t, doc.Components.Schemas, limen.OpenAPIAuthCredentialSignUpRequestSchema)
 	require.Contains(t, doc.Components.Schemas, limen.OpenAPIAuthPasswordSetRequestSchema)
+	require.Contains(t, doc.Components.Schemas, limen.OpenAPIAuthTokensSchema)
+	require.Contains(t, doc.Components.Schemas, limen.OpenAPIAuthErrorResponseSchema)
 	require.Contains(t, doc.Components.Schemas, limen.OpenAPIAuthUsernameAvailabilityResponseSchema)
 }
 

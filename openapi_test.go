@@ -100,14 +100,28 @@ func TestOpenAPIIncludesCoreAndPluginRoutes(t *testing.T) {
 	require.Len(t, me.Security, 1)
 	assert.Contains(t, me.Security[0], openAPISessionCookieScheme)
 	assertResponseSchemaRef(t, me, http.StatusOK, OpenAPIAuthSessionResponseSchema)
+	assertResponseSchemaRef(t, me, http.StatusUnauthorized, OpenAPIAuthErrorResponseSchema)
 	assert.Equal(t, "apiKey", doc.Components.SecuritySchemes[openAPISessionCookieScheme].Type)
 	require.Contains(t, doc.Components.Schemas, OpenAPIAuthSessionResponseSchema)
 	require.Contains(t, doc.Components.Schemas, OpenAPIAuthUserSchema)
+	require.Contains(t, doc.Components.Schemas, OpenAPIAuthTokensSchema)
+	require.Contains(t, doc.Components.Schemas, OpenAPIAuthErrorResponseSchema)
 	require.Contains(t, doc.Components.Schemas, OpenAPIAuthSessionListResponseSchema)
 	assert.NotContains(t, doc.Components.Schemas, OpenAPIAuthCredentialSignInRequestSchema)
 
+	sessionSchema := doc.Components.Schemas[OpenAPIAuthSessionResponseSchema]
+	sessionProperties, ok := sessionSchema["properties"].(map[string]OpenAPISchema)
+	require.True(t, ok)
+	assert.Equal(t, OpenAPIRefSchema(OpenAPIAuthTokensSchema), sessionProperties["tokens"])
+
+	errorSchema := doc.Components.Schemas[OpenAPIAuthErrorResponseSchema]
+	errorProperties, ok := errorSchema["properties"].(map[string]OpenAPISchema)
+	require.True(t, ok)
+	assert.Equal(t, OpenAPIStringSchema(), errorProperties["message"])
+
 	signout := requireOperation(t, doc, "/api/auth/signout", "post")
 	assert.Equal(t, "No Content", signout.Responses["204"].Description)
+	assertResponseSchemaRef(t, signout, http.StatusUnauthorized, OpenAPIAuthErrorResponseSchema)
 
 	pluginRoute := requireOperation(t, doc, "/api/auth/test/{provider}/items/{id}", "get")
 	assert.Equal(t, "test-route", pluginRoute.OperationID)
@@ -123,6 +137,7 @@ func TestOpenAPIIncludesCoreAndPluginRoutes(t *testing.T) {
 	require.NotNil(t, secure.RequestBody)
 	assert.Contains(t, secure.RequestBody.Content, "application/x-www-form-urlencoded")
 	assert.Equal(t, "Created", secure.Responses["201"].Description)
+	assertResponseSchemaRef(t, secure, http.StatusUnprocessableEntity, OpenAPIAuthErrorResponseSchema)
 }
 
 func TestOpenAPIIncludesBearerAlternativeWhenEnabled(t *testing.T) {

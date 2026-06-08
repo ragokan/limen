@@ -7,6 +7,7 @@ import (
 )
 
 const sessionResponseUserKey = "user"
+const sessionResponseTokensKey = "tokens"
 
 type Responder struct {
 	cfg                *responseEnvelopeConfig
@@ -146,9 +147,14 @@ func (rs Responder) SessionResponse(w http.ResponseWriter, r *http.Request, core
 		return nil
 	}
 
-	return rs.JSON(w, r, http.StatusOK, map[string]any{
+	payload := map[string]any{
 		sessionResponseUserKey: SerializeModel(core.Schema.User, result.User),
-	})
+	}
+	if tokens := rs.sessionTokensPayload(sessionResult); len(tokens) > 0 {
+		payload[sessionResponseTokensKey] = tokens
+	}
+
+	return rs.JSON(w, r, http.StatusOK, payload)
 }
 
 func (rs Responder) handleSessionTransformer(w http.ResponseWriter, r *http.Request, result *AuthenticationResult, sessionResult *SessionResult) {
@@ -201,6 +207,27 @@ func (rs Responder) setSessionHeaders(w http.ResponseWriter, sessionResult *Sess
 	if len(exposed) > 0 {
 		rs.appendExposeHeaders(w, exposed...)
 	}
+}
+
+func (rs Responder) sessionTokensPayload(sessionResult *SessionResult) map[string]any {
+	if sessionResult == nil {
+		return nil
+	}
+	if sessionResult.Cookie != nil && !rs.bearerEnabled {
+		return nil
+	}
+
+	tokens := make(map[string]any, 2)
+	if sessionResult.Token != "" {
+		tokens["auth_token"] = sessionResult.Token
+	}
+	if sessionResult.RefreshToken != "" {
+		tokens["refresh_token"] = sessionResult.RefreshToken
+	}
+	if len(tokens) == 0 {
+		return nil
+	}
+	return tokens
 }
 
 // appendExposeHeaders appends header names to Access-Control-Expose-Headers

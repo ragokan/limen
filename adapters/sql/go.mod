@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/ragokan/limen v0.1.9
+	github.com/ragokan/limen v0.1.10
 	github.com/stretchr/testify v1.11.1
 	modernc.org/sqlite v1.46.1
 )

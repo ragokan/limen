@@ -23,6 +23,8 @@ func TestOpenAPIMetadataForRefreshRoute(t *testing.T) {
 	assert.Equal(t, []string{limen.OpenAPIAuthTag}, refresh.Tags)
 	assertOpenAPIRequestSchemaRef(t, refresh, limen.OpenAPIAuthRefreshRequestSchema)
 	assertOpenAPIResponseSchemaRef(t, refresh, http.StatusOK, limen.OpenAPIAuthSessionResponseSchema)
+	assertOpenAPIResponseSchemaRef(t, refresh, http.StatusBadRequest, limen.OpenAPIAuthErrorResponseSchema)
+	assertOpenAPIResponseSchemaRef(t, refresh, http.StatusUnauthorized, limen.OpenAPIAuthErrorResponseSchema)
 
 	me := requireOpenAPIOperation(t, doc, "/auth/me", "get")
 	require.Contains(t, doc.Components.SecuritySchemes, "bearerAuth")
@@ -33,6 +35,8 @@ func TestOpenAPIMetadataForRefreshRoute(t *testing.T) {
 
 	require.Contains(t, doc.Components.Schemas, limen.OpenAPIAuthRefreshRequestSchema)
 	require.Contains(t, doc.Components.Schemas, limen.OpenAPIAuthSessionResponseSchema)
+	require.Contains(t, doc.Components.Schemas, limen.OpenAPIAuthTokensSchema)
+	require.Contains(t, doc.Components.Schemas, limen.OpenAPIAuthErrorResponseSchema)
 }
 
 func TestOpenAPIOmitsRefreshRouteWhenRefreshTokensDisabled(t *testing.T) {

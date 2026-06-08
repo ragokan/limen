@@ -3,10 +3,10 @@ module example/oauth-google
 go 1.25.0
 
 require (
-	github.com/ragokan/limen v0.1.9
-	github.com/ragokan/limen/adapters/gorm v0.1.9
-	github.com/ragokan/limen/plugins/oauth v0.1.9
-	github.com/ragokan/limen/plugins/oauth-google v0.1.9
+	github.com/ragokan/limen v0.1.10
+	github.com/ragokan/limen/adapters/gorm v0.1.10
+	github.com/ragokan/limen/plugins/oauth v0.1.10
+	github.com/ragokan/limen/plugins/oauth-google v0.1.10
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.30.1
 )

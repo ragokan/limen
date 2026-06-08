@@ -26,6 +26,8 @@ const (
 	OpenAPIAuthSessionListItemSchema              = "AuthSessionListItem"
 	OpenAPIAuthSessionListResponseSchema          = "AuthSessionListResponse"
 	OpenAPIAuthMessageResponseSchema              = "AuthMessageResponse"
+	OpenAPIAuthTokensSchema                       = "AuthTokens"
+	OpenAPIAuthErrorResponseSchema                = "AuthErrorResponse"
 	OpenAPIAuthVerifyEmailRequestSchema           = "AuthVerifyEmailRequest"
 	OpenAPIAuthRefreshRequestSchema               = "AuthRefreshRequest"
 	OpenAPIAuthCredentialSignInRequestSchema      = "AuthCredentialSignInRequest"
@@ -214,6 +216,10 @@ func OpenAPIJSONResponse(description string, schema OpenAPISchema) OpenAPIRespon
 	}
 }
 
+func OpenAPIAuthErrorResponse(description string) OpenAPIResponse {
+	return OpenAPIJSONResponse(description, OpenAPIRefSchema(OpenAPIAuthErrorResponseSchema))
+}
+
 func (a *Limen) OpenAPI(opts ...OpenAPIOption) *OpenAPIDocument {
 	config := a.defaultOpenAPIConfig()
 	for _, opt := range opts {
@@ -324,6 +330,7 @@ func openAPIOperationForRoute(config *OpenAPIConfig, route RegisteredRoute, path
 	}
 
 	responses := openAPIResponses(metadata.Responses)
+	responses = openAPIResponsesWithAuthErrors(responses)
 
 	security := append([]OpenAPISecurityRequirement(nil), metadata.Security...)
 	if len(security) == 0 && metadata.AuthRequired {
@@ -362,7 +369,8 @@ func defaultOpenAPIAuthSchemas() map[string]OpenAPISchema {
 			"email_verified_at": dateTime,
 		}, "email"),
 		OpenAPIAuthSessionResponseSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
-			"user": OpenAPIRefSchema(OpenAPIAuthUserSchema),
+			"user":   OpenAPIRefSchema(OpenAPIAuthUserSchema),
+			"tokens": OpenAPIRefSchema(OpenAPIAuthTokensSchema),
 		}, "user"),
 		OpenAPIAuthSessionListItemSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
 			"id": OpenAPISchema{
@@ -378,6 +386,13 @@ func defaultOpenAPIAuthSchemas() map[string]OpenAPISchema {
 		}, "user_id", "created_at", "expires_at", "last_access"),
 		OpenAPIAuthSessionListResponseSchema: OpenAPIArraySchema(OpenAPIRefSchema(OpenAPIAuthSessionListItemSchema)),
 		OpenAPIAuthMessageResponseSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
+			"message": OpenAPIStringSchema(),
+		}, "message"),
+		OpenAPIAuthTokensSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
+			"auth_token":    OpenAPIStringSchema(),
+			"refresh_token": OpenAPIStringSchema(),
+		}),
+		OpenAPIAuthErrorResponseSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
 			"message": OpenAPIStringSchema(),
 		}, "message"),
 		OpenAPIAuthVerifyEmailRequestSchema: OpenAPIObjectSchema(map[string]OpenAPISchema{
@@ -567,6 +582,30 @@ func openAPIResponses(responses map[int]OpenAPIResponse) map[string]OpenAPIRespo
 		out[strconv.Itoa(status)] = response
 	}
 	return out
+}
+
+func openAPIResponsesWithAuthErrors(responses map[string]OpenAPIResponse) map[string]OpenAPIResponse {
+	if responses == nil {
+		responses = make(map[string]OpenAPIResponse)
+	}
+
+	for status, description := range map[int]string{
+		http.StatusBadRequest:          "Bad request",
+		http.StatusUnauthorized:        "Unauthorized",
+		http.StatusForbidden:           "Forbidden",
+		http.StatusConflict:            "Conflict",
+		http.StatusUnprocessableEntity: "Validation error",
+		http.StatusTooManyRequests:     "Too many requests",
+		http.StatusInternalServerError: "Internal server error",
+	} {
+		code := strconv.Itoa(status)
+		if _, exists := responses[code]; exists {
+			continue
+		}
+		responses[code] = OpenAPIAuthErrorResponse(description)
+	}
+
+	return responses
 }
 
 func requestBodyForContentTypes(contentTypes []string) *OpenAPIRequestBody {
