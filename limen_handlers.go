@@ -82,7 +82,7 @@ func coreRouteMetadata(summary string, opts ...RouteMetadataOption) *RouteMetada
 func (h *limenHandlers) GetSession(w http.ResponseWriter, r *http.Request) {
 	session, err := GetCurrentSessionFromCtx(r)
 	if err != nil {
-		h.core.Cookies().ClearSessionCookie(w)
+		h.core.Cookies().DeleteSessionCookie(w)
 		h.responder.Error(w, r, NewLimenError(err.Error(), http.StatusUnauthorized, nil))
 		return
 	}
@@ -191,7 +191,7 @@ func (h *limenHandlers) SignOut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.core.Cookies().ClearSessionCookie(w)
+	h.core.Cookies().DeleteSessionCookie(w)
 
 	h.responder.JSON(w, r, http.StatusNoContent, nil)
 }
